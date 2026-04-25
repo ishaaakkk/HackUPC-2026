@@ -1,0 +1,7 @@
+google.generativeai
+elevenlabs
+python-dotenv
+fastapi
+uvicorn
+pydantic
+python-multipart
