@@ -315,8 +315,11 @@
     });
   }
 
-  // Microphone recording
-  micBtn.addEventListener("click", async () => {
+  // Microphone recording — Web Speech API
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null;
+
+  micBtn.addEventListener("click", () => {
     if (state.isRecording) {
       stopRecording();
     } else {
@@ -324,58 +327,62 @@
     }
   });
 
-  async function startRecording() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      state.audioChunks = [];
-      state.mediaRecorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-          ? "audio/webm;codecs=opus"
-          : "audio/webm",
-      });
-
-      state.mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) state.audioChunks.push(e.data);
-      };
-
-      state.mediaRecorder.onstop = () => {
-        stream.getTracks().forEach((t) => t.stop());
-        processAudioRecording();
-      };
-
-      state.mediaRecorder.start();
-      state.isRecording = true;
-      micBtn.classList.add("recording");
-      micBtn.innerHTML = "⏹";
-      micStatus.textContent = "Grabando... Pulsa para detener";
-      micStatus.className = "mic-status recording";
-    } catch (e) {
-      console.error("Mic error:", e);
-      alert(
-        "No se pudo acceder al micrófono. Asegúrate de dar permiso."
-      );
+  function startRecording() {
+    if (!SpeechRecognition) {
+      alert("Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.");
+      return;
     }
+
+    recognition = new SpeechRecognition();
+    recognition.lang = "es-ES";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = async (event) => {
+      const transcript = event.results[0][0].transcript;
+      await sendTranscriptToBackend(transcript);
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech error:", event.error);
+      alert("Error al reconocer voz: " + event.error);
+      resetMicUI();
+    };
+
+    recognition.onend = () => {
+      state.isRecording = false;
+      resetMicUI();
+    };
+
+    recognition.start();
+    state.isRecording = true;
+    micBtn.classList.add("recording");
+    micBtn.innerHTML = "⏹";
+    micStatus.textContent = "Escuchando... Pulsa para detener";
+    micStatus.className = "mic-status recording";
   }
 
   function stopRecording() {
-    if (state.mediaRecorder && state.mediaRecorder.state === "recording") {
-      state.mediaRecorder.stop();
-      state.isRecording = false;
-      micBtn.classList.remove("recording");
-      micBtn.innerHTML = "🎙️";
-      micStatus.textContent = "Procesando audio...";
-      micStatus.className = "mic-status processing";
+    if (recognition) {
+      recognition.stop();
     }
+    state.isRecording = false;
+    resetMicUI();
   }
 
-  async function processAudioRecording() {
-    const blob = new Blob(state.audioChunks, { type: "audio/webm" });
+  function resetMicUI() {
+    micBtn.classList.remove("recording");
+    micBtn.innerHTML = "🎙️";
+    micStatus.textContent = "Pulsa para grabar";
+    micStatus.className = "mic-status";
+  }
 
-    showLoading("Transcribiendo y refinando destinos...");
+  async function sendTranscriptToBackend(transcript) {
+    showLoading("Refinando destinos...");
 
     try {
       const formData = new FormData();
-      formData.append("audio", blob, "recording.webm");
+      formData.append("transcript", transcript);
       formData.append("locations", JSON.stringify(state.locations));
 
       const res = await fetch("/api/voice-validate", {
@@ -390,11 +397,9 @@
 
       const data = await res.json();
 
-      // Show transcript
       transcriptText.textContent = data.transcript || "(sin transcripción)";
       transcriptBox.classList.add("visible");
 
-      // Update locations
       if (data.locations && data.locations.length > 0) {
         state.locations = data.locations;
         renderLocationCards();
@@ -406,8 +411,6 @@
     } catch (e) {
       console.error("Voice validation error:", e);
       alert("Error al procesar el audio: " + e.message);
-      micStatus.textContent = "Pulsa para grabar";
-      micStatus.className = "mic-status";
       hideLoading();
     }
   }

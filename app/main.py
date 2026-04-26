@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Request
-from app.stt import transcribe_audio
+
 from app.llm import refine_locations_with_voice
 import json
 import requests as http_requests
@@ -138,34 +138,25 @@ async def detect_origin(request: Request):
 
 # ---------- PHASE 2: Voice Validation ----------
 
+# A esto:
 @router.post("/voice-validate")
 async def voice_validate(
-    audio: UploadFile = File(...),
+    transcript: str = Form(...),
     locations: str = Form(...)
 ):
-    """
-    Receives audio + current locations JSON.
-    Transcribes audio, then asks Gemini to refine/correct the locations.
-    """
     try:
         locations_list = json.loads(locations)
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="'locations' is not valid JSON")
 
     try:
-        # Transcribe audio with ElevenLabs
-        transcript = transcribe_audio(audio.file)
-
-        # Refine locations with Gemini
         result = refine_locations_with_voice(locations_list, transcript)
-
         return {
             "transcript": transcript,
             "locations": result.get("locations", locations_list)
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing voice: {str(e)}")
-
 
 # ---------- PHASE 3: Flight Search ----------
 
