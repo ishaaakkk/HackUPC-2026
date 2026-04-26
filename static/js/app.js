@@ -425,7 +425,12 @@
     // Build destinations string
     const destCities = state.confirmedLocations.map((l) => l.city).join(",");
     const originCity = state.origin?.city || "Barcelona";
-
+    // AÑADE ESTO:
+    console.log("=== DEBUG VUELOS ===");
+    console.log("Origin:", originCity);
+    console.log("Destinations:", destCities);
+    console.log("Confirmed locations:", state.confirmedLocations);
+    console.log("URL:", `/api/search-flights?origin=${encodeURIComponent(originCity)}&destinations=${encodeURIComponent(destCities)}&date=2026`);
     showLoading("Buscando vuelos baratos...");
 
     try {

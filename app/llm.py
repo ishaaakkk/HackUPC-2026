@@ -19,18 +19,22 @@ def analyze_media_for_locations(file_path: str, mime_type: str = "image/jpeg") -
 
     prompt = """Analiza esta imagen y determina qué lugar(es) del mundo podrían ser.
 
-INSTRUCCIONES:
+INSTRUCCIONES CRÍTICAS:
 - Identifica entre 1 y 5 posibles ubicaciones que coincidan con lo que se ve en la imagen.
+- IMPORTANTE: El campo "city" DEBE ser el nombre de una CIUDAD REAL y RECONOCIBLE (no monumentos ni lugares específicos).
+  * Si reconoces la Torre Eiffel → "Paris" (no "Torre Eiffel")
+  * Si reconoces la Sagrada Familia → "Barcelona" (no "Sagrada Familia")
+  * Si reconoces Big Ben → "Londres" (no "Big Ben")
 - Para cada ubicación, proporciona: ciudad, país, coordenadas (latitud, longitud), nivel de confianza (0.0 a 1.0), tipo de clima, tipo de paisaje, y una breve descripción.
 - Ordena por confianza de mayor a menor.
-- Si reconoces un monumento o lugar exacto, la confianza debe ser alta (>0.8).
+- Si reconoces un monumento o lugar exacto, LA CONFIANZA DEBE SER ALTA (>0.8), pero LA CIUDAD DEBE SER CORRECTA.
 - Si es un paisaje genérico, proporciona varias ciudades que coincidan con ese tipo de paisaje.
 
 FORMATO DE RESPUESTA (JSON estricto, sin markdown):
 {
   "locations": [
     {
-      "city": "Nombre de la ciudad",
+      "city": "Nombre de la ciudad (REAL, no monumento)",
       "country": "País",
       "latitude": 0.0,
       "longitude": 0.0,
@@ -108,6 +112,11 @@ INSTRUCCIONES:
 - Si el usuario añade nuevas ubicaciones, añádelas a la lista.
 - Si el usuario elimina alguna, quítala.
 - Mantén entre 1 y 5 ubicaciones en la lista final.
+- CRÍTICO: El campo "city" DEBE SER SIEMPRE UNA CIUDAD REAL Y RECONOCIBLE:
+  * Si el usuario dice "Torre Eiffel", entiende que quiere "Paris"
+  * Si dice "Big Ben", entiende que quiere "Londres"  
+  * Si dice "Sagrada Familia", entiende que quiere "Barcelona"
+  * SIEMPRE normaliza a la ciudad principal, no al monumento específico
 - Para nuevas ubicaciones, genera coordenadas, clima, paisaje y descripción.
 - Ajusta los niveles de confianza: las confirmadas por el usuario deben tener confianza alta (>0.9).
 
@@ -115,7 +124,7 @@ FORMATO DE RESPUESTA (JSON estricto, sin markdown):
 {{
   "locations": [
     {{
-      "city": "Nombre de la ciudad",
+      "city": "Nombre de la ciudad (REAL, no monumento)",
       "country": "País",
       "latitude": 0.0,
       "longitude": 0.0,
