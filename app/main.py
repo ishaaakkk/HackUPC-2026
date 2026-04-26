@@ -3,15 +3,40 @@ from app.stt import transcribe_audio
 from app.llm import refine_locations_with_voice
 import json
 import requests as http_requests
-
-router = APIRouter(prefix="/api")
-
 import tempfile
 import urllib.request
 import os
 from pathlib import Path
+from typing import Any, Dict, List
+
+router = APIRouter(prefix="/api")
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+# ---------- helpers ----------
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, str(default)))
+    except Exception:
+        return default
+
+
+def _parse_destinations(destinations: str) -> List[Any]:
+    """Accepts either a comma-separated string or a JSON array of destination objects."""
+    raw = (destinations or "").strip()
+    if not raw:
+        return []
+    if raw.startswith("["):
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                return parsed
+        except Exception:
+            pass
+    return [d.strip() for d in raw.split(",") if d.strip()]
+
 
 # ---------- PHASE 1: Media Analysis ----------
 
@@ -20,80 +45,72 @@ async def analyze_media(
     media: UploadFile = File(None),
     url: str = Form(None)
 ):
-    """
-    Receives an image/video file or URL.
-
-    New flow:
-    - Google Vision extracts labels, landmarks, OCR text and web entities.
-    - Videos are sampled into 3 frames before analysis.
-    - Google Places searches possible real locations with coordinates.
-    - Google Places photos are downloaded and checked visually with Vision terms.
-    - Saves vision_features.json, output_location.json and output_locations_simple.json in the project root.
-    """
+    """Receives an image/video file or URL and analyzes it with Vision + Places."""
     if not media and not url:
         raise HTTPException(status_code=400, detail="Must provide either media file or url")
 
     tmp_file = None
     try:
-        suffix = ""
+        suffix = ".jpg"
         mime_type = "image/jpeg"
-        source_input = None
-        source_type = "local_file"
+
+        if media and media.filename:
+            original_name = media.filename
+            lower = original_name.lower()
+            if lower.endswith(".png"):
+                suffix = ".png"
+            elif lower.endswith(".webp"):
+                suffix = ".webp"
+            elif lower.endswith((".mp4", ".mov", ".webm", ".avi", ".mkv", ".m4v")):
+                suffix = Path(lower).suffix or ".mp4"
+            if media.content_type:
+                mime_type = media.content_type
+        elif url:
+            lower = url.lower().split("?")[0]
+            if lower.endswith(".mp4"):
+                suffix = ".mp4"; mime_type = "video/mp4"
+            elif lower.endswith(".mov"):
+                suffix = ".mov"; mime_type = "video/quicktime"
+            elif lower.endswith(".webm"):
+                suffix = ".webm"; mime_type = "video/webm"
+            elif lower.endswith(".png"):
+                suffix = ".png"; mime_type = "image/png"
+            elif lower.endswith(".webp"):
+                suffix = ".webp"; mime_type = "image/webp"
+
+        fd, tmp_path = tempfile.mkstemp(suffix=suffix)
+        os.close(fd)
+        tmp_file = tmp_path
+
+        source_input = "uploaded_media"
+        source_type = "file_upload"
 
         if media:
-            filename = media.filename or "uploaded_media"
-            suffix = Path(filename).suffix or ""
-            fd, tmp_path = tempfile.mkstemp(suffix=suffix)
-            os.close(fd)
-            tmp_file = tmp_path
-
             content = await media.read()
             with open(tmp_path, "wb") as f:
                 f.write(content)
-            if media.content_type:
-                mime_type = media.content_type
-            source_input = filename
+            source_input = media.filename or "uploaded_media"
             source_type = "file_upload"
-
         elif url:
-            source_input = url
-            source_type = "url"
-            lower_url = url.lower().split("?")[0]
-            if lower_url.endswith(".mp4"):
-                suffix, mime_type = ".mp4", "video/mp4"
-            elif lower_url.endswith(".mov"):
-                suffix, mime_type = ".mov", "video/quicktime"
-            elif lower_url.endswith(".webm"):
-                suffix, mime_type = ".webm", "video/webm"
-            elif lower_url.endswith(".png"):
-                suffix, mime_type = ".png", "image/png"
-            elif lower_url.endswith(".webp"):
-                suffix, mime_type = ".webp", "image/webp"
-            else:
-                suffix, mime_type = ".jpg", "image/jpeg"
-
-            fd, tmp_path = tempfile.mkstemp(suffix=suffix)
-            os.close(fd)
-            tmp_file = tmp_path
-
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-            with urllib.request.urlopen(req, timeout=30) as response:
+            with urllib.request.urlopen(req, timeout=25) as response:
                 content = response.read()
-                header_content_type = response.headers.get("Content-Type")
-                if header_content_type:
-                    mime_type = header_content_type.split(";")[0].strip() or mime_type
+                content_type = response.headers.get("Content-Type")
+                if content_type and not mime_type.startswith("video/"):
+                    mime_type = content_type.split(";")[0].strip() or mime_type
             with open(tmp_path, "wb") as f:
                 f.write(content)
+            source_input = url
+            source_type = "url"
 
         from app.vision_places import analyze_media_with_vision_places
-
         result = analyze_media_with_vision_places(
-            tmp_file,
+            tmp_path,
             mime_type=mime_type,
             source_input=source_input,
             source_type=source_type,
-            max_candidates=int(os.getenv("MAX_CANDIDATES", "5")),
-            photos_per_place=int(os.getenv("PHOTOS_PER_PLACE", "2")),
+            max_candidates=_env_int("MAX_CANDIDATES", 5),
+            photos_per_place=_env_int("PHOTOS_PER_PLACE", 1),
             output_dir=PROJECT_ROOT,
         )
         return result
@@ -134,13 +151,13 @@ async def detect_origin(request: Request):
                 "country_code": "ES",
                 "latitude": 41.3874,
                 "longitude": 2.1686,
-                "note": "IP local detectada, usando Barcelona por defecto"
+                "note": "IP local detectada, usando Barcelona por defecto",
             }
 
         resp = http_requests.get(
             f"https://ipapi.co/{client_ip}/json/",
             headers={"User-Agent": "HackUPC-Travel-App/1.0"},
-            timeout=5
+            timeout=5,
         )
         data = resp.json()
 
@@ -152,7 +169,7 @@ async def detect_origin(request: Request):
                 "country_code": "ES",
                 "latitude": 41.3874,
                 "longitude": 2.1686,
-                "note": "No se pudo detectar la ubicación, usando Barcelona por defecto"
+                "note": "No se pudo detectar la ubicación, usando Barcelona por defecto",
             }
 
         return {
@@ -161,9 +178,8 @@ async def detect_origin(request: Request):
             "country": data.get("country_name", "Unknown"),
             "country_code": data.get("country_code", ""),
             "latitude": data.get("latitude", 0),
-            "longitude": data.get("longitude", 0)
+            "longitude": data.get("longitude", 0),
         }
-
     except Exception as e:
         return {
             "status": "error",
@@ -172,7 +188,7 @@ async def detect_origin(request: Request):
             "country_code": "ES",
             "latitude": 41.3874,
             "longitude": 2.1686,
-            "note": f"Error: {str(e)}"
+            "note": f"Error: {str(e)}",
         }
 
 
@@ -183,10 +199,6 @@ async def voice_validate(
     audio: UploadFile = File(...),
     locations: str = Form(...)
 ):
-    """
-    Receives audio + current locations JSON.
-    Transcribes audio, then asks Gemini to refine/correct the locations.
-    """
     try:
         locations_list = json.loads(locations)
     except json.JSONDecodeError:
@@ -195,11 +207,18 @@ async def voice_validate(
     try:
         transcript = transcribe_audio(audio.file)
         result = refine_locations_with_voice(locations_list, transcript)
-
-        return {
-            "transcript": transcript,
-            "locations": result.get("locations", locations_list)
-        }
+        refined = result.get("locations", locations_list)
+        # Preserve flight hints when Gemini returns only old fields.
+        by_name = {str(x.get("city") or x.get("name", "")).lower(): x for x in locations_list if isinstance(x, dict)}
+        for loc in refined:
+            if not isinstance(loc, dict):
+                continue
+            old = by_name.get(str(loc.get("city") or loc.get("name", "")).lower())
+            if old:
+                loc.setdefault("flight_search_city", old.get("flight_search_city"))
+                loc.setdefault("formatted_address", old.get("formatted_address"))
+                loc.setdefault("maps_url", old.get("maps_url"))
+        return {"transcript": transcript, "locations": refined}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing voice: {str(e)}")
 
@@ -208,26 +227,27 @@ async def voice_validate(
 
 @router.get("/search-flights")
 def search_flights(origin: str, destinations: str, date: str = "2026"):
-    """Searches for the cheapest flights from origin to each destination."""
+    """Searches flights. Destinations can be names or JSON objects from the image-analysis step."""
     from flights import SkyscannerOptimizer
     from hotels import HotelSearcher
-    import os
 
     api_key = os.getenv("SKYSCANNER_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="SKYSCANNER_API_KEY not configured")
 
+    dest_list = _parse_destinations(destinations)
+    if not dest_list:
+        raise HTTPException(status_code=400, detail="No destinations provided")
+
     optimizer = SkyscannerOptimizer(api_key)
     hotel_searcher = HotelSearcher(api_key)
 
-    dest_list = [d.strip() for d in destinations.split(",") if d.strip()]
-
     try:
         results = optimizer.optimize_route([origin] + dest_list, date)
-
-        for dest_name in results["results"]:
-            results["results"][dest_name]["hotel_price"] = hotel_searcher.get_hotel_prices(dest_name)
-
+        for dest_name, info in results.get("results", {}).items():
+            # Use flight_search_city for hotel price when available, otherwise destination name.
+            hotel_key = info.get("flight_search_city") or info.get("destination_name") or dest_name
+            info["hotel_price"] = hotel_searcher.get_hotel_prices(hotel_key)
         return results
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))

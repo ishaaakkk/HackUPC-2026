@@ -195,10 +195,123 @@ class SkyscannerOptimizer:
 
         return "Formato de fecha no reconocido (usa YYYY, YYYY-MM o YYYY-MM-DD)"
 
+    def _to_float(self, value, default=0.0):
+        try:
+            if value is None or value == "":
+                return default
+            return float(value)
+        except Exception:
+            return default
+
+    def _destination_metadata(self, dest):
+        """Normaliza destinos que pueden venir como string o como objeto JSON del análisis visual."""
+        if isinstance(dest, dict):
+            name = str(dest.get("name") or dest.get("city") or dest.get("destination_name") or "Destino").strip()
+            city = str(dest.get("city") or name).strip()
+            country = str(dest.get("country") or "").strip()
+            address = str(dest.get("formatted_address") or "").strip()
+            flight_search_city = str(
+                dest.get("flight_search_city")
+                or dest.get("flight_search_label")
+                or dest.get("nearest_city")
+                or city
+                or name
+            ).strip()
+            lat = self._to_float(dest.get("latitude", dest.get("lat")), None)
+            lon = self._to_float(dest.get("longitude", dest.get("lon")), None)
+            coords = dest.get("coordinates") if isinstance(dest.get("coordinates"), dict) else {}
+            if lat is None:
+                lat = self._to_float(coords.get("latitude", coords.get("lat")), None)
+            if lon is None:
+                lon = self._to_float(coords.get("longitude", coords.get("lng")), None)
+            return {
+                "raw": dest,
+                "display_name": name,
+                "city": city,
+                "country": country,
+                "formatted_address": address,
+                "flight_search_city": flight_search_city,
+                "lat": lat,
+                "lon": lon,
+                "climate": dest.get("climate", ""),
+                "landscape": dest.get("landscape", ""),
+                "description": dest.get("description", ""),
+                "maps_url": dest.get("maps_url"),
+                "confidence": dest.get("confidence", dest.get("final_confidence")),
+            }
+
+        text = str(dest or "").strip()
+        return {
+            "raw": dest,
+            "display_name": text,
+            "city": text,
+            "country": "",
+            "formatted_address": "",
+            "flight_search_city": text,
+            "lat": None,
+            "lon": None,
+            "climate": "",
+            "landscape": "",
+            "description": "",
+            "maps_url": None,
+            "confidence": None,
+        }
+
+    def get_nearest_airports_from_coordinates(self, latitude, longitude, radius_km=350):
+        """Busca aeropuertos cercanos usando coordenadas ya conocidas del lugar visual."""
+        lat = self._to_float(latitude, None)
+        lon = self._to_float(longitude, None)
+        if lat is None or lon is None:
+            return None
+
+        url = f"{self.base_url}/geo/hierarchy/flights/nearest"
+        payload = {
+            "locator": {"coordinates": {"latitude": lat, "longitude": lon}},
+            "locale": self.config["locale"],
+        }
+        try:
+            response = requests.post(url, json=payload, headers=self.headers, timeout=10)
+            if response.status_code != 200:
+                return None
+            data = response.json()
+            results = data.get("content", {}).get("results", {})
+            places_data = results.get("places", data.get("places", []))
+            items = places_data.values() if isinstance(places_data, dict) else places_data
+
+            valid_airports = []
+            for p in items:
+                if not isinstance(p, dict) or p.get("type") != "PLACE_TYPE_AIRPORT":
+                    continue
+                coords = p.get("coordinates", {}) or {}
+                alat = coords.get("latitude")
+                alon = coords.get("longitude")
+                if alat is None or alon is None:
+                    continue
+                dist = self.haversine(lat, lon, alat, alon)
+                if dist <= radius_km:
+                    valid_airports.append({
+                        "entityId": p.get("entityId"),
+                        "name": p.get("name"),
+                        "distance": dist,
+                        "lat": alat,
+                        "lon": alon,
+                    })
+            return sorted(valid_airports, key=lambda x: x["distance"])
+        except Exception as e:
+            print(f"⚠️ Error buscando aeropuertos por coordenadas: {e}")
+            return None
+
     def optimize_route(self, cities, date):
-        origin = cities[0]
+        """
+        Busca vuelos desde origen hacia destinos.
+
+        `cities` puede contener strings o diccionarios procedentes del análisis visual.
+        Antes fallaba con `unhashable type: 'dict'` porque se usaba el diccionario completo como
+        clave de `final_data['results']`. Ahora normalizamos cada destino y usamos siempre una clave string.
+        """
+        origin = str(cities[0] if cities else "Barcelona")
         destinations = cities[1:]
-        
+
         try:
             origin_loc = self.geolocator.geocode(origin, language=self.config["locale"][:2])
         except Exception:
@@ -209,82 +322,123 @@ class SkyscannerOptimizer:
             print(f" Origen {origin} no reconocido. Buscando aeropuertos cercanos...")
             nearby = self.get_nearest_airports_fallback(origin)
             if nearby:
-                origin_id = nearby[0]['entityId']
+                origin_id = nearby[0]["entityId"]
                 print(f"✅ Usando aeropuerto cercano: {nearby[0]['name']}")
             else:
                 raise ValueError(f"No se pudo localizar el origen '{origin}' ni aeropuertos cercanos.")
 
         final_data = {
-            "origin": {"name": origin, "lat": origin_loc.latitude if origin_loc else 0, "lon": origin_loc.longitude if origin_loc else 0},
-            "results": {}
+            "origin": {
+                "name": origin,
+                "lat": origin_loc.latitude if origin_loc else 0,
+                "lon": origin_loc.longitude if origin_loc else 0,
+            },
+            "results": {},
         }
 
         for dest in destinations:
-            print(f"🔎 Buscando para: {dest}...")
-            try:
-                dest_loc = self.geolocator.geocode(dest, language=self.config["locale"][:2])
-            except Exception:
-                dest_loc = None
-            dest_id = self.get_city_entity(dest)
-            
+            meta = self._destination_metadata(dest)
+            display_name = meta["display_name"] or meta["flight_search_city"] or "Destino"
+            flight_search_city = meta["flight_search_city"] or display_name
+            print(f"🔎 Buscando vuelos para: {display_name} → destino aéreo: {flight_search_city}...")
+
+            map_lat = meta["lat"]
+            map_lon = meta["lon"]
+
+            dest_loc = None
+            if map_lat is None or map_lon is None:
+                try:
+                    dest_loc = self.geolocator.geocode(flight_search_city, language=self.config["locale"][:2])
+                    if dest_loc:
+                        map_lat = dest_loc.latitude
+                        map_lon = dest_loc.longitude
+                except Exception:
+                    dest_loc = None
+
+            dest_id = self.get_city_entity(flight_search_city)
+
             flight_info = None
             via_airport = None
-            
+            airport_distance_km = None
+
             if not dest_id:
-                print(f"   ⚠️ {dest} sin conexión directa. Aplicando fallback...")
-                nearby = self.get_nearest_airports_fallback(dest)
+                nearby = None
+                if meta["lat"] is not None and meta["lon"] is not None:
+                    print(f"   ⚠️ No hay entityId para {flight_search_city}. Buscando aeropuerto cercano por coordenadas...")
+                    nearby = self.get_nearest_airports_from_coordinates(meta["lat"], meta["lon"])
+                if not nearby:
+                    print(f"   ⚠️ Fallback por nombre para {flight_search_city}...")
+                    nearby = self.get_nearest_airports_fallback(flight_search_city)
+
                 if nearby:
-                    for airport in nearby[:2]: # Probamos los 2 más cercanos
-                        res = self._get_best_price(origin_id, airport['entityId'], date)
+                    for airport in nearby[:3]:
+                        res = self._get_best_price(origin_id, airport["entityId"], date)
                         if isinstance(res, dict):
                             flight_info = res
-                            via_airport = airport['name']
+                            via_airport = airport.get("name")
+                            airport_distance_km = airport.get("distance")
                             break
             else:
                 flight_info = self._get_best_price(origin_id, dest_id, date)
+
+            base_result = {
+                "destination_name": display_name,
+                "flight_search_city": flight_search_city,
+                "country": meta.get("country", ""),
+                "formatted_address": meta.get("formatted_address", ""),
+                "visual_lat": meta["lat"],
+                "visual_lon": meta["lon"],
+                "lat": map_lat if map_lat is not None else 0,
+                "lon": map_lon if map_lon is not None else 0,
+                "via_airport": via_airport,
+                "airport_distance_km": round(airport_distance_km, 1) if airport_distance_km is not None else None,
+                "maps_url": meta.get("maps_url"),
+                "confidence": meta.get("confidence"),
+            }
 
             if isinstance(flight_info, dict):
                 dep = flight_info.get("departure", {})
                 date_str = "N/A"
                 if isinstance(dep, dict):
-                    date_str = f"{dep.get('year')}-{dep.get('month'):02d}-{dep.get('day'):02d}"
-                
-                # Formatear la fecha de observación (frescura del dato)
+                    y, m, d = dep.get("year"), dep.get("month"), dep.get("day")
+                    if y and m and d:
+                        date_str = f"{y}-{int(m):02d}-{int(d):02d}"
+
                 obs_raw = flight_info.get("quote_at")
                 obs_str = "N/A"
                 if obs_raw:
                     try:
-                        obs_dt = datetime.fromisoformat(obs_raw.replace('Z', '+00:00'))
+                        obs_dt = datetime.fromisoformat(obs_raw.replace("Z", "+00:00"))
                         obs_str = obs_dt.strftime("%d/%m %H:%M")
-                    except:
+                    except Exception:
                         obs_str = "Reciente"
 
-                price_int = int(float(flight_info['price']))
+                price_int = int(float(flight_info["price"]))
                 price_val = f"{price_int} €"
-                if via_airport: price_val += f" (vía {via_airport})"
-                
+                if via_airport:
+                    price_val += f" (vía {via_airport})"
+
                 is_direct = flight_info.get("is_direct", False)
                 stops_label = "Directo" if is_direct else "1 o más escalas"
-                
-                final_data["results"][dest] = {
+                base_result.update({
                     "price": price_val,
                     "date": date_str,
                     "observed": obs_str,
-                    "duration": f"{flight_info['duration']} min" if flight_info.get('duration') and flight_info['duration'] != "N/A" else None,
+                    "duration": f"{flight_info['duration']} min" if flight_info.get("duration") and flight_info["duration"] != "N/A" else None,
                     "stops": stops_label,
-                    "lat": dest_loc.latitude if dest_loc else 0, 
-                    "lon": dest_loc.longitude if dest_loc else 0
-                }
+                })
             else:
-                final_data["results"][dest] = {
+                base_result.update({
                     "price": str(flight_info) if flight_info else "Sin resultados",
                     "date": "N/A",
                     "observed": "N/A",
+                    "duration": None,
                     "stops": "N/A",
-                    "lat": dest_loc.latitude if dest_loc else 0,
-                    "lon": dest_loc.longitude if dest_loc else 0
-                }
-        
+                })
+
+            key = str(display_name)
+            final_data["results"][key] = base_result
+
         return final_data
 
 # --- EJEMPLO DE USO ---
