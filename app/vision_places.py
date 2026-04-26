@@ -515,12 +515,47 @@ def _guess_country_from_address(address: str) -> str:
     return parts[-1] if parts else ""
 
 
+_POSTAL_CODE_RE_FLIGHTS = re.compile(r"\b\d{4,6}\b")
+
+
+def _guess_flight_city_from_address(address: str) -> str:
+    """Best-effort city/airport search term from a Google formatted address."""
+    if not address:
+        return ""
+    parts = [p.strip() for p in str(address).split(",") if p.strip()]
+    if len(parts) < 2:
+        return ""
+    for part in reversed(parts[:-1]):
+        cleaned = _POSTAL_CODE_RE_FLIGHTS.sub("", part)
+        cleaned = re.sub(r"\s+", " ", cleaned).strip(" ,")
+        lower = cleaned.lower()
+        if not cleaned:
+            continue
+        if any(street_word in lower for street_word in ["street", "st ", "avenue", "road", "c/", "carrer", "calle", "via "]):
+            continue
+        return cleaned
+    return ""
+
+
+def _flight_search_city_for_candidate(candidate: Dict[str, Any]) -> str:
+    explicit = str(candidate.get("flight_search_city") or "").strip()
+    if explicit:
+        return explicit
+    from_address = _guess_flight_city_from_address(str(candidate.get("formatted_address") or ""))
+    if from_address:
+        return from_address
+    return str(candidate.get("name") or candidate.get("city") or "").strip()
+
+
 def _frontend_locations(candidates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     locations = []
     for c in candidates:
+        flight_city = _flight_search_city_for_candidate(c)
         locations.append(
             {
+                # Keep the detected place name for the map/card title.
                 "city": c.get("name", "Unknown place"),
+                "name": c.get("name", "Unknown place"),
                 "country": _guess_country_from_address(c.get("formatted_address", "")),
                 "latitude": c.get("latitude"),
                 "longitude": c.get("longitude"),
@@ -531,6 +566,9 @@ def _frontend_locations(candidates: List[Dict[str, Any]]) -> List[Dict[str, Any]
                 "formatted_address": c.get("formatted_address", ""),
                 "maps_url": c.get("maps_url"),
                 "place_id": c.get("place_id"),
+                # New field used by /search-flights. A landmark/POI such as
+                # Sagrada Família should search flights to Barcelona.
+                "flight_search_city": flight_city,
             }
         )
     return locations
@@ -548,6 +586,7 @@ def _simple_output(full_result: Dict[str, Any]) -> Dict[str, Any]:
             {
                 "name": c.get("name"),
                 "formatted_address": c.get("formatted_address", ""),
+                "flight_search_city": _flight_search_city_for_candidate(c),
                 "coordinates": {"latitude": c.get("latitude"), "longitude": c.get("longitude")},
             }
             for c in candidates
@@ -2243,3 +2282,1729 @@ def find_and_rank_places(
         photos_per_place=photos_per_place,
     )
     return dedupe_candidate_locations_v8(candidates, max_candidates=max_candidates), queries
+
+
+# ---------------------------------------------------------------------------
+# V9 flight-search city enrichment
+# ---------------------------------------------------------------------------
+# The image analyzer returns POIs/landmarks, but the flight step needs a city or
+# airport-friendly query. Enrich every final candidate with flight_search_city so
+# the frontend can keep showing the exact place on the map while /search-flights
+# searches by the nearest city parsed from formatted_address.
+
+_old_find_and_rank_places_v9 = find_and_rank_places
+
+
+def _enrich_candidates_with_flight_city_v9(candidates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            continue
+        candidate["flight_search_city"] = _flight_search_city_for_candidate(candidate)
+    return candidates
+
+
+def find_and_rank_places(
+    summary: Dict[str, Any],
+    original_terms: List[str],
+    max_candidates: int = 5,
+    photos_per_place: int = 2,
+) -> Tuple[List[Dict[str, Any]], List[str]]:
+    candidates, queries = _old_find_and_rank_places_v9(
+        summary,
+        original_terms,
+        max_candidates=max_candidates,
+        photos_per_place=photos_per_place,
+    )
+    return _enrich_candidates_with_flight_city_v9(candidates), queries
+
+# ---------------------------------------------------------------------------
+# V10 flight country enrichment
+# ---------------------------------------------------------------------------
+# /search-flights can remove duplicate countries only if the analyzed locations
+# carry a reliable country field. Final candidates already have formatted_address;
+# this enrichment adds country + flight_search_country directly to every returned
+# candidate while keeping the exact place for the map.
+
+_old_find_and_rank_places_v10 = find_and_rank_places
+
+
+def _enrich_candidates_with_flight_country_v10(candidates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            continue
+        country = candidate.get("country") or _guess_country_from_address(str(candidate.get("formatted_address") or ""))
+        if country:
+            candidate["country"] = country
+            candidate["flight_search_country"] = country
+        candidate["flight_search_city"] = _flight_search_city_for_candidate(candidate)
+    return candidates
+
+
+def find_and_rank_places(
+    summary: Dict[str, Any],
+    original_terms: List[str],
+    max_candidates: int = 5,
+    photos_per_place: int = 2,
+) -> Tuple[List[Dict[str, Any]], List[str]]:
+    candidates, queries = _old_find_and_rank_places_v10(
+        summary,
+        original_terms,
+        max_candidates=max_candidates,
+        photos_per_place=photos_per_place,
+    )
+    return _enrich_candidates_with_flight_country_v10(candidates), queries
+
+# ---------------------------------------------------------------------------
+# V11 country-diversity override: max one suggestion per country
+# ---------------------------------------------------------------------------
+# The previous country dedupe happened too late in the flight step and the image
+# suggestions could still contain several candidates from the same country
+# (for example several mountains in the USA). This final override enriches the
+# candidates with a more reliable country and filters the analyzer suggestions
+# themselves so output_location.json, possible_locations, and locations contain
+# at most one candidate per country.
+
+_old_find_and_rank_places_v11 = find_and_rank_places
+
+_COUNTRY_ALIASES_V11 = {
+    "united states": "USA",
+    "united states of america": "USA",
+    "us": "USA",
+    "u s": "USA",
+    "u s a": "USA",
+    "usa": "USA",
+    "america": "USA",
+    "uk": "United Kingdom",
+    "u k": "United Kingdom",
+    "great britain": "United Kingdom",
+    "england": "United Kingdom",
+    "scotland": "United Kingdom",
+    "wales": "United Kingdom",
+    "japan": "Japan",
+    "canada": "Canada",
+    "nepal": "Nepal",
+    "china": "China",
+    "france": "France",
+    "switzerland": "Switzerland",
+    "italy": "Italy",
+    "spain": "Spain",
+    "austria": "Austria",
+    "germany": "Germany",
+    "india": "India",
+    "morocco": "Morocco",
+    "greece": "Greece",
+    "portugal": "Portugal",
+    "australia": "Australia",
+    "south africa": "South Africa",
+}
+
+_PLACE_NAME_COUNTRY_HINTS_V11 = [
+    ("mount shasta", "USA"),
+    ("mt shasta", "USA"),
+    ("shasta", "USA"),
+    ("klamath national forest", "USA"),
+    ("mount rainier", "USA"),
+    ("rainier", "USA"),
+    ("howard knob", "USA"),
+    ("cascade range", "USA"),
+    ("canadian rockies", "Canada"),
+    ("banff", "Canada"),
+    ("jasper", "Canada"),
+    ("mount fuji", "Japan"),
+    ("mt fuji", "Japan"),
+    ("fuji", "Japan"),
+    ("mount everest", "Nepal"),
+    ("mt everest", "Nepal"),
+    ("everest", "Nepal"),
+    ("matterhorn", "Switzerland"),
+    ("mont blanc", "France"),
+    ("dolomites", "Italy"),
+    ("table mountain", "South Africa"),
+    ("sagrada", "Spain"),
+    ("eiffel", "France"),
+    ("colosseum", "Italy"),
+]
+
+_INVALID_COUNTRY_WORDS_V11 = {
+    "", "unknown", "mt everest", "mount everest", "mountain", "mountain range",
+    "california", "washington", "ca", "wa", "oregon", "colorado", "nevada",
+    "new york", "paris", "barcelona", "rome", "tokyo",
+}
+
+
+def _normalize_country_v11(value: Any) -> str:
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    norm = _dedupe_norm_v8(raw) if "_dedupe_norm_v8" in globals() else _term_norm(raw)
+    if norm in _INVALID_COUNTRY_WORDS_V11:
+        return ""
+    return _COUNTRY_ALIASES_V11.get(norm, raw)
+
+
+def _country_from_address_v11(address: str) -> str:
+    parts = [p.strip() for p in str(address or "").split(",") if p.strip()]
+    if len(parts) < 2:
+        return ""
+    # Country is usually the last comma-separated part. Normalize aliases like
+    # United States -> USA and ignore state/city fragments.
+    return _normalize_country_v11(parts[-1])
+
+
+def _country_from_name_v11(name: str) -> str:
+    norm_name = _dedupe_norm_v8(name) if "_dedupe_norm_v8" in globals() else _term_norm(name)
+    for needle, country in _PLACE_NAME_COUNTRY_HINTS_V11:
+        if needle in norm_name:
+            return country
+    return ""
+
+
+def _country_from_coordinates_v11(candidate: Dict[str, Any]) -> str:
+    lat, lng = _extract_location(candidate)
+    if lat is None or lng is None:
+        return ""
+    # Lightweight coordinate fallback for common cases. This is only used when
+    # Google does not return a usable country in formatted_address.
+    if 24 <= lat <= 50 and -125 <= lng <= -66:
+        return "USA"
+    if 41 <= lat <= 84 and -141 <= lng <= -52:
+        return "Canada"
+    if 24 <= lat <= 46 and 122 <= lng <= 146:
+        return "Japan"
+    if 26 <= lat <= 31 and 80 <= lng <= 89.5:
+        return "Nepal"
+    if 18 <= lat <= 54 and 73 <= lng <= 135:
+        return "China"
+    if 35 <= lat <= 44 and -10 <= lng <= 5:
+        return "Spain"
+    if 41 <= lat <= 51.5 and -5.5 <= lng <= 9.5:
+        return "France"
+    if 45 <= lat <= 48.5 and 5.5 <= lng <= 11:
+        return "Switzerland"
+    if 36 <= lat <= 47.5 and 6 <= lng <= 19:
+        return "Italy"
+    return ""
+
+
+def _candidate_country_v11(candidate: Dict[str, Any]) -> str:
+    # Prefer reliable address/name/coordinates over an existing bad country such
+    # as country="Mt Everest" from old address parsing.
+    country = _country_from_address_v11(str(candidate.get("formatted_address") or ""))
+    if country:
+        return country
+    country = _country_from_name_v11(str(candidate.get("name") or candidate.get("city") or ""))
+    if country:
+        return country
+    country = _country_from_coordinates_v11(candidate)
+    if country:
+        return country
+    return _normalize_country_v11(candidate.get("flight_search_country") or candidate.get("country"))
+
+
+def _country_key_v11(country: str) -> str:
+    return _dedupe_norm_v8(country) if "_dedupe_norm_v8" in globals() else _term_norm(country)
+
+
+def _enrich_country_fields_v11(candidate: Dict[str, Any]) -> Dict[str, Any]:
+    country = _candidate_country_v11(candidate)
+    if country:
+        candidate["country"] = country
+        candidate["flight_search_country"] = country
+    candidate["flight_search_city"] = _flight_search_city_for_candidate(candidate)
+    return candidate
+
+
+def _dedupe_by_country_v11(candidates: List[Dict[str, Any]], max_candidates: int) -> List[Dict[str, Any]]:
+    enriched = [_enrich_country_fields_v11(c) for c in candidates if isinstance(c, dict)]
+    enriched.sort(
+        key=lambda c: float((c.get("scores") or {}).get("final_confidence", c.get("final_confidence", 0)) or 0),
+        reverse=True,
+    )
+
+    kept: List[Dict[str, Any]] = []
+    seen_countries: set[str] = set()
+
+    for candidate in enriched:
+        country = _candidate_country_v11(candidate)
+        key = _country_key_v11(country)
+        if key and key in seen_countries:
+            candidate.setdefault("country_dedupe", {})
+            candidate["country_dedupe"].update({"removed": True, "reason": f"Another suggestion from {country} was already kept."})
+            continue
+        if key:
+            seen_countries.add(key)
+        candidate.setdefault("country_dedupe", {})
+        candidate["country_dedupe"].update({"kept": True, "country_key": key or "unknown"})
+        kept.append(candidate)
+        if len(kept) >= max_candidates:
+            break
+
+    return kept
+
+
+def find_and_rank_places(
+    summary: Dict[str, Any],
+    original_terms: List[str],
+    max_candidates: int = 5,
+    photos_per_place: int = 2,
+) -> Tuple[List[Dict[str, Any]], List[str]]:
+    # Ask the previous pipeline for a larger pool. The final recommendations are
+    # then filtered down to max_candidates with at most one country repeated.
+    pool_size = max(max_candidates * 6, max_candidates + 8)
+    candidates, queries = _old_find_and_rank_places_v11(
+        summary,
+        original_terms,
+        max_candidates=pool_size,
+        photos_per_place=photos_per_place,
+    )
+    diversified = _dedupe_by_country_v11(candidates, max_candidates=max_candidates)
+    if "country_diversity_filter" not in queries:
+        queries = ["country_diversity_filter"] + queries
+    if diversified:
+        diversified[0].setdefault("country_diversity_note", "Image suggestions are filtered to keep at most one candidate per country.")
+    return diversified, queries
+
+# ---------------------------------------------------------------------------
+# V12 country-diverse fill + airport-friendly mountain flight cities
+# ---------------------------------------------------------------------------
+# V11 correctly removed repeated countries, but that could leave fewer than
+# max_candidates suggestions. V12 fills the remaining slots with visually related
+# fallback places from countries not already used. It also fixes mountain POIs
+# whose formatted_address is not a full country address, e.g. Mount Everest.
+
+_old_find_and_rank_places_v12 = find_and_rank_places
+
+_PLACE_FLIGHT_CITY_HINTS_V12 = [
+    ("mount everest", "Kathmandu", "Nepal"),
+    ("mt everest", "Kathmandu", "Nepal"),
+    ("everest", "Kathmandu", "Nepal"),
+    ("mount fuji", "Tokyo", "Japan"),
+    ("mt fuji", "Tokyo", "Japan"),
+    ("fuji", "Tokyo", "Japan"),
+    ("matterhorn", "Zurich", "Switzerland"),
+    ("mont blanc", "Geneva", "France"),
+    ("dolomites", "Venice", "Italy"),
+    ("table mountain", "Cape Town", "South Africa"),
+    ("canadian rockies", "Calgary", "Canada"),
+    ("banff", "Calgary", "Canada"),
+    ("jasper", "Edmonton", "Canada"),
+    ("mount rainier", "Seattle", "USA"),
+    ("rainier", "Seattle", "USA"),
+    ("mount shasta", "San Francisco", "USA"),
+    ("mt shasta", "San Francisco", "USA"),
+    ("klamath national forest", "San Francisco", "USA"),
+]
+
+_COUNTRY_FALLBACK_ROWS_V12 = {
+    "mountain": [
+        ("Mount Everest", "Sagarmatha National Park, Nepal", 27.9881569, 86.9253667, "Nepal", "Kathmandu"),
+        ("Mount Fuji", "Shizuoka/Yamanashi, Japan", 35.3606, 138.7274, "Japan", "Tokyo"),
+        ("Matterhorn", "Zermatt, Switzerland", 45.9763, 7.6586, "Switzerland", "Zurich"),
+        ("Mont Blanc", "Chamonix, France", 45.8326, 6.8652, "France", "Geneva"),
+        ("Dolomites", "South Tyrol, Italy", 46.4102, 11.8440, "Italy", "Venice"),
+        ("Canadian Rockies", "Alberta/British Columbia, Canada", 52.0000, -117.0000, "Canada", "Calgary"),
+        ("Table Mountain", "Cape Town, South Africa", -33.9628, 18.4098, "South Africa", "Cape Town"),
+        ("Mount Shasta", "Mount Shasta, California, USA", 41.4098732, -122.1948817, "USA", "San Francisco"),
+    ],
+    "historic": [
+        ("Colosseum", "Rome, Italy", 41.8902, 12.4922, "Italy", "Rome"),
+        ("Acropolis of Athens", "Athens, Greece", 37.9715, 23.7257, "Greece", "Athens"),
+        ("Alhambra", "Granada, Spain", 37.1761, -3.5881, "Spain", "Granada"),
+        ("Chichen Itza", "Yucatán, Mexico", 20.6843, -88.5678, "Mexico", "Cancun"),
+        ("Angkor Wat", "Siem Reap, Cambodia", 13.4125, 103.8670, "Cambodia", "Siem Reap"),
+    ],
+    "beach": [
+        ("Platja de la Barceloneta", "Barcelona, Spain", 41.3784, 2.1925, "Spain", "Barcelona"),
+        ("Praia da Marinha", "Lagoa, Portugal", 37.0902, -8.4126, "Portugal", "Faro"),
+        ("Navagio Beach", "Zakynthos, Greece", 37.8590, 20.6240, "Greece", "Zakynthos"),
+        ("Bondi Beach", "Sydney, Australia", -33.8915, 151.2767, "Australia", "Sydney"),
+        ("Playa de las Canteras", "Las Palmas de Gran Canaria, Spain", 28.1404, -15.4366, "Spain", "Las Palmas"),
+    ],
+    "desert": [
+        ("Erg Chebbi", "Morocco", 31.1452, -4.0248, "Morocco", "Marrakesh"),
+        ("Wadi Rum Protected Area", "Jordan", 29.5320, 35.0063, "Jordan", "Amman"),
+        ("Dune du Pilat", "Arcachon Bay, France", 44.5892, -1.2130, "France", "Bordeaux"),
+        ("Great Sand Dunes National Park and Preserve", "Colorado, USA", 37.7916, -105.5943, "USA", "Denver"),
+        ("Sossusvlei", "Namib Desert, Namibia", -24.7333, 15.3667, "Namibia", "Windhoek"),
+    ],
+    "urban": [
+        ("Times Square", "New York, USA", 40.7580, -73.9855, "USA", "New York"),
+        ("Shibuya Crossing", "Tokyo, Japan", 35.6595, 139.7005, "Japan", "Tokyo"),
+        ("Plaça de Catalunya", "Barcelona, Spain", 41.3870, 2.1701, "Spain", "Barcelona"),
+        ("La Défense", "Paris, France", 48.8918, 2.2361, "France", "Paris"),
+        ("Marina Bay Sands", "Singapore", 1.2834, 103.8607, "Singapore", "Singapore"),
+    ],
+    "university": [
+        ("Universitat Politècnica de Catalunya", "Barcelona, Spain", 41.3891, 2.1133, "Spain", "Barcelona"),
+        ("University of Oxford", "Oxford, United Kingdom", 51.7548, -1.2544, "United Kingdom", "London"),
+        ("Harvard University", "Cambridge, MA, USA", 42.3770, -71.1167, "USA", "Boston"),
+        ("Stanford University", "Stanford, CA, USA", 37.4275, -122.1697, "USA", "San Francisco"),
+        ("University of Tokyo", "Tokyo, Japan", 35.7130, 139.7628, "Japan", "Tokyo"),
+    ],
+    "generic": [
+        ("Eiffel Tower", "Paris, France", 48.8584, 2.2945, "France", "Paris"),
+        ("Sagrada Família", "Barcelona, Spain", 41.4036, 2.1744, "Spain", "Barcelona"),
+        ("Colosseum", "Rome, Italy", 41.8902, 12.4922, "Italy", "Rome"),
+        ("Times Square", "New York, USA", 40.7580, -73.9855, "USA", "New York"),
+        ("Shibuya Crossing", "Tokyo, Japan", 35.6595, 139.7005, "Japan", "Tokyo"),
+    ],
+}
+
+
+def _place_hint_v12(candidate: Dict[str, Any]) -> Tuple[str, str]:
+    text = _dedupe_norm_v8(f"{candidate.get('name', '')} {candidate.get('formatted_address', '')}") if "_dedupe_norm_v8" in globals() else _term_norm(f"{candidate.get('name', '')} {candidate.get('formatted_address', '')}")
+    for needle, flight_city, country in _PLACE_FLIGHT_CITY_HINTS_V12:
+        if needle in text:
+            return flight_city, country
+    return "", ""
+
+
+# Override again so all later calls use airport-friendly cities for POIs.
+def _flight_search_city_for_candidate(candidate: Dict[str, Any]) -> str:
+    hint_city, _ = _place_hint_v12(candidate)
+    if hint_city:
+        return hint_city
+    explicit = str(candidate.get("flight_search_city") or "").strip()
+    # Ignore bad state/mountain values created by earlier address parsing.
+    bad = {"ca", "wa", "california", "washington", "mt everest", "mount everest"}
+    if explicit and _dedupe_norm_v8(explicit) not in bad:
+        return explicit
+    from_address = _guess_flight_city_from_address(str(candidate.get("formatted_address") or ""))
+    if from_address and _dedupe_norm_v8(from_address) not in bad:
+        return from_address
+    return str(candidate.get("name") or candidate.get("city") or "").strip()
+
+
+def _candidate_country_v12(candidate: Dict[str, Any]) -> str:
+    _, hint_country = _place_hint_v12(candidate)
+    if hint_country:
+        return hint_country
+    # Use V11 logic after place-specific hints.
+    try:
+        return _candidate_country_v11(candidate)
+    except Exception:
+        return _guess_country_from_address(str(candidate.get("formatted_address") or ""))
+
+
+def _enrich_country_fields_v12(candidate: Dict[str, Any]) -> Dict[str, Any]:
+    country = _candidate_country_v12(candidate)
+    if country:
+        candidate["country"] = country
+        candidate["flight_search_country"] = country
+    candidate["flight_search_city"] = _flight_search_city_for_candidate(candidate)
+    return candidate
+
+
+def _fallback_candidate_v12(name: str, address: str, lat: float, lng: float, country: str, flight_city: str, category: str, rank: int) -> Dict[str, Any]:
+    confidence = max(0.22, 0.42 - rank * 0.025)
+    return {
+        "name": name,
+        "formatted_address": address,
+        "latitude": lat,
+        "longitude": lng,
+        "coordinates": {"latitude": lat, "longitude": lng},
+        "place_id": None,
+        "query_used": f"country_diversity_fallback:{category}",
+        "rating": None,
+        "types": ["country_diversity_fallback", category],
+        "matched_exact_signals": [],
+        "matched_visual_terms": [],
+        "photos_checked": [],
+        "scores": {
+            "query_relevance": 0.0,
+            "vision_entity_match": 0.0,
+            "best_photo_visual_similarity": 0.0,
+            "final_confidence": confidence,
+        },
+        "final_confidence": confidence,
+        "reasons": [
+            "Added as a visually related alternative to keep five suggestions from different countries."
+        ],
+        "maps_url": f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(name + ' ' + address)}",
+        "source": "country_diversity_fallback",
+        "country": country,
+        "flight_search_country": country,
+        "flight_search_city": flight_city,
+    }
+
+
+def _fill_to_five_countries_v12(candidates: List[Dict[str, Any]], summary: Dict[str, Any], original_terms: List[str], max_candidates: int) -> List[Dict[str, Any]]:
+    kept: List[Dict[str, Any]] = []
+    seen_countries: set[str] = set()
+    seen_names: set[str] = set()
+
+    for candidate in candidates:
+        candidate = _enrich_country_fields_v12(candidate)
+        country = _candidate_country_v12(candidate)
+        country_key = _country_key_v11(country) if "_country_key_v11" in globals() else _term_norm(country)
+        name_key = _dedupe_norm_v8(candidate.get("name", "")) if "_dedupe_norm_v8" in globals() else _term_norm(candidate.get("name", ""))
+        if country_key and country_key in seen_countries:
+            continue
+        if name_key and name_key in seen_names:
+            continue
+        if country_key:
+            seen_countries.add(country_key)
+        if name_key:
+            seen_names.add(name_key)
+        kept.append(candidate)
+        if len(kept) >= max_candidates:
+            return kept
+
+    category = _visual_category_v2(summary, original_terms) if "_visual_category_v2" in globals() else "generic"
+    rows = list(_COUNTRY_FALLBACK_ROWS_V12.get(category, [])) + list(_COUNTRY_FALLBACK_ROWS_V12.get("generic", []))
+    for rank, (name, address, lat, lng, country, flight_city) in enumerate(rows, start=1):
+        country_key = _country_key_v11(country) if "_country_key_v11" in globals() else _term_norm(country)
+        name_key = _dedupe_norm_v8(name) if "_dedupe_norm_v8" in globals() else _term_norm(name)
+        if country_key in seen_countries or name_key in seen_names:
+            continue
+        candidate = _fallback_candidate_v12(name, address, lat, lng, country, flight_city, category, rank)
+        kept.append(candidate)
+        seen_countries.add(country_key)
+        seen_names.add(name_key)
+        if len(kept) >= max_candidates:
+            break
+
+    return kept[:max_candidates]
+
+
+def find_and_rank_places(
+    summary: Dict[str, Any],
+    original_terms: List[str],
+    max_candidates: int = 5,
+    photos_per_place: int = 2,
+) -> Tuple[List[Dict[str, Any]], List[str]]:
+    pool_size = max(max_candidates * 8, max_candidates + 12)
+    candidates, queries = _old_find_and_rank_places_v12(
+        summary,
+        original_terms,
+        max_candidates=pool_size,
+        photos_per_place=photos_per_place,
+    )
+    diversified = _fill_to_five_countries_v12(candidates, summary, original_terms, max_candidates=max_candidates)
+    if "country_diversity_fill_v12" not in queries:
+        queries = ["country_diversity_fill_v12"] + queries
+    if diversified:
+        diversified[0].setdefault("country_diversity_note", "Suggestions are filled to five results with at most one suggestion per country.")
+    return diversified, queries
+
+
+# Override frontend/simple serialization so country uses enriched values instead
+# of re-parsing formatted_address only.
+def _frontend_locations(candidates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    locations = []
+    for c in candidates:
+        c = _enrich_country_fields_v12(c)
+        locations.append(
+            {
+                "city": c.get("name", "Unknown place"),
+                "name": c.get("name", "Unknown place"),
+                "country": c.get("country") or _candidate_country_v12(c),
+                "latitude": c.get("latitude"),
+                "longitude": c.get("longitude"),
+                "confidence": c.get("scores", {}).get("final_confidence", c.get("final_confidence", 0)),
+                "climate": "",
+                "landscape": ", ".join((c.get("types") or [])[:3]),
+                "description": " ".join(c.get("reasons", [])),
+                "formatted_address": c.get("formatted_address", ""),
+                "maps_url": c.get("maps_url"),
+                "place_id": c.get("place_id"),
+                "flight_search_city": c.get("flight_search_city") or _flight_search_city_for_candidate(c),
+                "flight_search_country": c.get("flight_search_country") or c.get("country"),
+            }
+        )
+    return locations
+
+
+def _simple_output(full_result: Dict[str, Any]) -> Dict[str, Any]:
+    candidates = full_result.get("location_inference", {}).get("candidate_locations", [])
+    return {
+        "source_input": full_result.get("source_input"),
+        "source_type": full_result.get("source_type"),
+        "media_type": full_result.get("media_type"),
+        "exact_location_found": full_result.get("location_inference", {}).get("exact_location_found", False),
+        "confidence_level": full_result.get("location_inference", {}).get("confidence_level", "low"),
+        "possible_locations": [
+            {
+                "name": _enrich_country_fields_v12(c).get("name"),
+                "formatted_address": c.get("formatted_address", ""),
+                "country": c.get("country") or _candidate_country_v12(c),
+                "flight_search_city": c.get("flight_search_city") or _flight_search_city_for_candidate(c),
+                "coordinates": {"latitude": c.get("latitude"), "longitude": c.get("longitude")},
+            }
+            for c in candidates
+            if c.get("latitude") is not None and c.get("longitude") is not None
+        ],
+    }
+
+# ---------------------------------------------------------------------------
+# V13 country validation + current temperature enrichment
+# ---------------------------------------------------------------------------
+# Fixes:
+# - Bad country values like postal codes (e.g. "01001") are no longer accepted.
+# - Candidates without a valid country are skipped/replaced by country-diverse
+#   fallbacks so the app still returns five suggestions from different countries.
+# - Each final suggestion includes current temperature data in `climate`.
+
+import re as _re_v13
+import time as _time_v13
+
+_WEATHER_CACHE_V13: Dict[str, Dict[str, Any]] = {}
+
+# Extra invalid country-like fragments that can appear when Google returns a
+# short/local formatted_address instead of a complete country address.
+_INVALID_COUNTRY_WORDS_V13 = set(globals().get("_INVALID_COUNTRY_WORDS_V11", set())) | {
+    "", "unknown", "n/a", "na", "none", "null",
+    "mt everest", "mount everest", "everest", "mountain", "mountain range",
+    "california", "washington", "oregon", "colorado", "nevada", "utah", "arizona",
+    "ca", "wa", "or", "co", "nv", "ut", "az",
+}
+
+# A compact whitelist for the app's common suggestions/fallbacks. If a country
+# is not listed we can still accept it, but only if it looks like a real country
+# name instead of a postal code/state/city fragment.
+_KNOWN_COUNTRIES_V13 = {
+    "USA", "United Kingdom", "Japan", "Canada", "Nepal", "China", "France",
+    "Switzerland", "Italy", "Spain", "Austria", "Germany", "India", "Morocco",
+    "Greece", "Portugal", "Australia", "South Africa", "Mexico", "Cambodia",
+    "Jordan", "Namibia", "Singapore", "Indonesia", "Thailand", "Brazil",
+    "Argentina", "Chile", "Peru", "New Zealand", "Norway", "Iceland",
+}
+
+
+def _looks_like_invalid_country_v13(value: Any) -> bool:
+    raw = str(value or "").strip()
+    if not raw:
+        return True
+    norm = _dedupe_norm_v8(raw) if "_dedupe_norm_v8" in globals() else _term_norm(raw)
+    if not norm or norm in _INVALID_COUNTRY_WORDS_V13:
+        return True
+    # Reject postal codes and numeric fragments like "01001".
+    if _re_v13.fullmatch(r"\d{3,10}", norm.replace(" ", "")):
+        return True
+    # Reject strings that contain no letters at all.
+    if not _re_v13.search(r"[a-zA-Z]", raw):
+        return True
+    # Reject very short state/province-like fragments unless explicitly known.
+    if len(norm) <= 2 and raw not in _KNOWN_COUNTRIES_V13:
+        return True
+    return False
+
+
+def _normalize_country_v13(value: Any) -> str:
+    raw = str(value or "").strip()
+    if _looks_like_invalid_country_v13(raw):
+        return ""
+    norm = _dedupe_norm_v8(raw) if "_dedupe_norm_v8" in globals() else _term_norm(raw)
+    aliases = globals().get("_COUNTRY_ALIASES_V11", {})
+    normalized = aliases.get(norm, raw)
+    if _looks_like_invalid_country_v13(normalized):
+        return ""
+    return normalized
+
+
+def _country_from_address_v13(address: str) -> str:
+    parts = [str(p or "").strip() for p in str(address or "").split(",") if str(p or "").strip()]
+    # Try from the end backwards. Google sometimes returns a trailing postal code
+    # or state-like fragment; we skip invalid fragments until a country-like value
+    # is found.
+    for part in reversed(parts):
+        country = _normalize_country_v13(part)
+        if country:
+            return country
+    return ""
+
+
+def _candidate_country_v13(candidate: Dict[str, Any]) -> str:
+    # 1) Place-specific hints, e.g. Mount Everest -> Nepal.
+    try:
+        _, hint_country = _place_hint_v12(candidate)
+        hint_country = _normalize_country_v13(hint_country)
+        if hint_country:
+            return hint_country
+    except Exception:
+        pass
+
+    # 2) Address parsed robustly from right to left.
+    country = _country_from_address_v13(str(candidate.get("formatted_address") or ""))
+    if country:
+        return country
+
+    # 3) Known place names and coordinate boxes.
+    try:
+        country = _normalize_country_v13(_country_from_name_v11(str(candidate.get("name") or candidate.get("city") or "")))
+        if country:
+            return country
+    except Exception:
+        pass
+    try:
+        country = _normalize_country_v13(_country_from_coordinates_v11(candidate))
+        if country:
+            return country
+    except Exception:
+        pass
+
+    # 4) Existing fields only if they pass validation.
+    return _normalize_country_v13(candidate.get("flight_search_country") or candidate.get("country"))
+
+
+def _weather_for_candidate_v13(candidate: Dict[str, Any]) -> Dict[str, Any]:
+    """Return a small current-weather payload using Open-Meteo.
+
+    This function is intentionally best-effort: if the weather request fails,
+    the location still appears, but `climate` is left as "N/A" with an error
+    note. Results are cached per rounded coordinate so five suggestions do not
+    trigger duplicate weather calls.
+    """
+    lat, lng = _extract_location(candidate)
+    if lat is None or lng is None:
+        return {"climate": "N/A", "weather_error": "missing_coordinates"}
+
+    key = f"{round(float(lat), 3)},{round(float(lng), 3)}"
+    if key in _WEATHER_CACHE_V13:
+        return dict(_WEATHER_CACHE_V13[key])
+
+    try:
+        params = {
+            "latitude": float(lat),
+            "longitude": float(lng),
+            "current": "temperature_2m",
+            "temperature_unit": "celsius",
+            "timezone": "auto",
+        }
+        timeout = int(os.getenv("WEATHER_API_TIMEOUT_SECONDS", "5") or 5)
+        response = requests.get("https://api.open-meteo.com/v1/forecast", params=params, timeout=timeout)
+        data = response.json() if response.content else {}
+        if response.status_code != 200:
+            raise RuntimeError(f"weather_http_{response.status_code}")
+        current = data.get("current") or {}
+        units = data.get("current_units") or {}
+        temp = current.get("temperature_2m")
+        if temp is None:
+            raise RuntimeError("temperature_2m_missing")
+        try:
+            temp_value = round(float(temp), 1)
+        except Exception:
+            temp_value = temp
+        unit = units.get("temperature_2m") or "°C"
+        climate = f"{temp_value}{unit}"
+        payload = {
+            "climate": climate,
+            "temperature": temp_value,
+            "temperature_unit": unit,
+            "weather": {
+                "provider": "Open-Meteo",
+                "temperature": temp_value,
+                "temperature_unit": unit,
+                "time": current.get("time"),
+                "latitude": data.get("latitude"),
+                "longitude": data.get("longitude"),
+            },
+        }
+    except Exception as e:
+        payload = {"climate": "N/A", "weather_error": str(e)}
+
+    _WEATHER_CACHE_V13[key] = dict(payload)
+    return payload
+
+
+def _enrich_candidate_v13(candidate: Dict[str, Any], include_weather: bool = True) -> Dict[str, Any]:
+    country = _candidate_country_v13(candidate)
+    if country:
+        candidate["country"] = country
+        candidate["flight_search_country"] = country
+    else:
+        candidate.pop("country", None)
+        candidate.pop("flight_search_country", None)
+
+    candidate["flight_search_city"] = _flight_search_city_for_candidate(candidate)
+
+    if include_weather:
+        candidate.update(_weather_for_candidate_v13(candidate))
+    return candidate
+
+
+def _fill_to_five_countries_v13(candidates: List[Dict[str, Any]], summary: Dict[str, Any], original_terms: List[str], max_candidates: int) -> List[Dict[str, Any]]:
+    kept: List[Dict[str, Any]] = []
+    seen_countries: set[str] = set()
+    seen_names: set[str] = set()
+
+    sorted_candidates = sorted(
+        [c for c in candidates if isinstance(c, dict)],
+        key=lambda c: float((c.get("scores") or {}).get("final_confidence", c.get("final_confidence", 0)) or 0),
+        reverse=True,
+    )
+
+    for candidate in sorted_candidates:
+        candidate = _enrich_candidate_v13(candidate, include_weather=False)
+        country = _candidate_country_v13(candidate)
+        if not country:
+            candidate.setdefault("country_dedupe", {})
+            candidate["country_dedupe"].update({"removed": True, "reason": "Invalid or missing country."})
+            continue
+        country_key = _country_key_v11(country) if "_country_key_v11" in globals() else _term_norm(country)
+        name_key = _dedupe_norm_v8(candidate.get("name", "")) if "_dedupe_norm_v8" in globals() else _term_norm(candidate.get("name", ""))
+        if country_key in seen_countries or name_key in seen_names:
+            continue
+        seen_countries.add(country_key)
+        if name_key:
+            seen_names.add(name_key)
+        kept.append(candidate)
+        if len(kept) >= max_candidates:
+            break
+
+    category = _visual_category_v2(summary, original_terms) if "_visual_category_v2" in globals() else "generic"
+    rows = list(_COUNTRY_FALLBACK_ROWS_V12.get(category, [])) + list(_COUNTRY_FALLBACK_ROWS_V12.get("generic", []))
+    for rank, (name, address, lat, lng, country, flight_city) in enumerate(rows, start=1):
+        country = _normalize_country_v13(country)
+        if not country:
+            continue
+        country_key = _country_key_v11(country) if "_country_key_v11" in globals() else _term_norm(country)
+        name_key = _dedupe_norm_v8(name) if "_dedupe_norm_v8" in globals() else _term_norm(name)
+        if country_key in seen_countries or name_key in seen_names:
+            continue
+        candidate = _fallback_candidate_v12(name, address, lat, lng, country, flight_city, category, rank)
+        kept.append(candidate)
+        seen_countries.add(country_key)
+        seen_names.add(name_key)
+        if len(kept) >= max_candidates:
+            break
+
+    # Add weather only after final trimming, to avoid unnecessary API calls.
+    return [_enrich_candidate_v13(c, include_weather=True) for c in kept[:max_candidates]]
+
+
+_old_find_and_rank_places_v13 = find_and_rank_places
+
+
+def find_and_rank_places(
+    summary: Dict[str, Any],
+    original_terms: List[str],
+    max_candidates: int = 5,
+    photos_per_place: int = 2,
+) -> Tuple[List[Dict[str, Any]], List[str]]:
+    pool_size = max(max_candidates * 8, max_candidates + 12)
+    candidates, queries = _old_find_and_rank_places_v13(
+        summary,
+        original_terms,
+        max_candidates=pool_size,
+        photos_per_place=photos_per_place,
+    )
+    diversified = _fill_to_five_countries_v13(candidates, summary, original_terms, max_candidates=max_candidates)
+    if "country_validation_weather_v13" not in queries:
+        queries = ["country_validation_weather_v13"] + queries
+    if diversified:
+        diversified[0].setdefault("country_diversity_note", "Suggestions are filled to five results with valid, non-repeated countries and current temperature.")
+    return diversified, queries
+
+
+# Override frontend/simple serialization again so the UI receives the enriched
+# climate/temperature fields instead of an empty string.
+def _frontend_locations(candidates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    locations = []
+    for c in candidates:
+        c = _enrich_candidate_v13(c, include_weather=True)
+        locations.append(
+            {
+                "city": c.get("name", "Unknown place"),
+                "name": c.get("name", "Unknown place"),
+                "country": c.get("country") or _candidate_country_v13(c),
+                "latitude": c.get("latitude"),
+                "longitude": c.get("longitude"),
+                "confidence": c.get("scores", {}).get("final_confidence", c.get("final_confidence", 0)),
+                "climate": c.get("climate") or "N/A",
+                "temperature": c.get("temperature"),
+                "temperature_unit": c.get("temperature_unit"),
+                "weather": c.get("weather"),
+                "weather_error": c.get("weather_error"),
+                "landscape": ", ".join((c.get("types") or [])[:3]),
+                "description": " ".join(c.get("reasons", [])),
+                "formatted_address": c.get("formatted_address", ""),
+                "maps_url": c.get("maps_url"),
+                "place_id": c.get("place_id"),
+                "flight_search_city": c.get("flight_search_city") or _flight_search_city_for_candidate(c),
+                "flight_search_country": c.get("flight_search_country") or c.get("country"),
+            }
+        )
+    return locations
+
+
+def _simple_output(full_result: Dict[str, Any]) -> Dict[str, Any]:
+    candidates = full_result.get("location_inference", {}).get("candidate_locations", [])
+    return {
+        "source_input": full_result.get("source_input"),
+        "source_type": full_result.get("source_type"),
+        "media_type": full_result.get("media_type"),
+        "exact_location_found": full_result.get("location_inference", {}).get("exact_location_found", False),
+        "confidence_level": full_result.get("location_inference", {}).get("confidence_level", "low"),
+        "possible_locations": [
+            {
+                "name": _enrich_candidate_v13(c).get("name"),
+                "formatted_address": c.get("formatted_address", ""),
+                "country": c.get("country") or _candidate_country_v13(c),
+                "flight_search_city": c.get("flight_search_city") or _flight_search_city_for_candidate(c),
+                "climate": c.get("climate") or "N/A",
+                "temperature": c.get("temperature"),
+                "temperature_unit": c.get("temperature_unit"),
+                "coordinates": {"latitude": c.get("latitude"), "longitude": c.get("longitude")},
+            }
+            for c in candidates
+            if c.get("latitude") is not None and c.get("longitude") is not None
+        ],
+    }
+
+
+# ---------------------------------------------------------------------------
+# V14 final polishing: strict country validation, reverse geocoding fallback,
+# preserved descriptions, and reliable current-temperature payload
+# ---------------------------------------------------------------------------
+# This patch intentionally avoids changing the UI-facing descriptive text unless
+# it was missing. It only fixes data quality fields that affect country
+# deduplication, flight search, and climate/temperature display.
+
+_COUNTRY_CACHE_V14: Dict[str, Dict[str, str]] = {}
+_WEATHER_CACHE_V14: Dict[str, Dict[str, Any]] = {}
+
+try:
+    import pycountry as _pycountry_v14  # type: ignore
+except Exception:  # pragma: no cover
+    _pycountry_v14 = None
+
+_COUNTRY_ALIASES_V14 = {
+    "usa": "United States",
+    "u.s.a.": "United States",
+    "u.s.": "United States",
+    "us": "United States",
+    "united states of america": "United States",
+    "uk": "United Kingdom",
+    "u.k.": "United Kingdom",
+    "uae": "United Arab Emirates",
+    "viet nam": "Vietnam",
+    "russian federation": "Russia",
+    "korea, republic of": "South Korea",
+    "republic of korea": "South Korea",
+    "korea": "South Korea",
+    "czechia": "Czech Republic",
+    "mt everest": "",
+    "mount everest": "",
+    "everest": "",
+    "ca": "",
+    "wa": "",
+    "ny": "",
+    "tx": "",
+    "01001": "",
+}
+
+_PLACE_HINTS_V14 = [
+    ("mount everest", "Nepal", "Kathmandu"),
+    ("mt everest", "Nepal", "Kathmandu"),
+    ("everest", "Nepal", "Kathmandu"),
+    ("sagarmatha", "Nepal", "Kathmandu"),
+    ("mount fuji", "Japan", "Tokyo"),
+    ("mt fuji", "Japan", "Tokyo"),
+    ("fuji", "Japan", "Tokyo"),
+    ("matterhorn", "Switzerland", "Zurich"),
+    ("mont blanc", "France", "Geneva"),
+    ("dolomites", "Italy", "Venice"),
+    ("table mountain", "South Africa", "Cape Town"),
+    ("canadian rockies", "Canada", "Calgary"),
+    ("banff", "Canada", "Calgary"),
+    ("jasper", "Canada", "Edmonton"),
+    ("mount rainier", "United States", "Seattle"),
+    ("rainier", "United States", "Seattle"),
+    ("mount shasta", "United States", "San Francisco"),
+    ("mt shasta", "United States", "San Francisco"),
+    ("klamath national forest", "United States", "San Francisco"),
+    ("sagrada familia", "Spain", "Barcelona"),
+    ("sagrada família", "Spain", "Barcelona"),
+    ("eiffel tower", "France", "Paris"),
+    ("colosseum", "Italy", "Rome"),
+    ("acropolis", "Greece", "Athens"),
+    ("alhambra", "Spain", "Granada"),
+]
+
+_STATE_OR_REGION_FRAGMENTS_V14 = {
+    "california", "washington", "colorado", "nevada", "utah", "oregon", "alberta",
+    "british columbia", "south tyrol", "shizuoka", "yamanashi", "yucatan",
+    "yucatán", "scotland", "england", "wales", "northern ireland",
+}
+
+
+def _country_norm_v14(value: Any) -> str:
+    try:
+        return _dedupe_norm_v8(value) if "_dedupe_norm_v8" in globals() else _term_norm(str(value or ""))
+    except Exception:
+        return _term_norm(str(value or ""))
+
+
+def _canonical_country_v14(value: Any) -> str:
+    raw = str(value or "").strip()
+    raw = re.sub(r"\s+", " ", raw).strip(" ,")
+    if not raw:
+        return ""
+
+    norm = _country_norm_v14(raw)
+    if not norm:
+        return ""
+
+    # Hard reject obvious non-country fragments.
+    if norm in _COUNTRY_ALIASES_V14 and _COUNTRY_ALIASES_V14[norm] == "":
+        return ""
+    if norm in _STATE_OR_REGION_FRAGMENTS_V14:
+        return ""
+    if re.fullmatch(r"[0-9 -]{3,}", norm):
+        return ""
+    if re.search(r"\d", norm):
+        return ""
+    if len(norm) <= 2:
+        return ""
+    if any(x in norm for x in ["street", "avenue", "road", "postcode", "postal", "zip"]):
+        return ""
+
+    if norm in _COUNTRY_ALIASES_V14:
+        return _COUNTRY_ALIASES_V14[norm]
+
+    # pycountry gives robust canonical country names without maintaining a huge
+    # whitelist. If unavailable in the user's environment, the fallback below
+    # still rejects the common bad cases.
+    if _pycountry_v14 is not None:
+        try:
+            found = _pycountry_v14.countries.lookup(raw)
+            # Use common_name when available, otherwise official name/name.
+            return getattr(found, "common_name", None) or getattr(found, "name", raw)
+        except Exception:
+            pass
+        try:
+            for country in _pycountry_v14.countries:
+                names = [getattr(country, "name", ""), getattr(country, "official_name", ""), getattr(country, "common_name", "")]
+                if norm in {_country_norm_v14(n) for n in names if n}:
+                    return getattr(country, "common_name", None) or getattr(country, "name", raw)
+        except Exception:
+            pass
+
+    # Last-resort acceptance: must look like a country name, not a short state or
+    # address fragment.
+    words = [w for w in norm.split() if w]
+    if 1 <= len(words) <= 4 and all(len(w) >= 3 for w in words):
+        return raw
+    return ""
+
+
+def _place_hint_country_city_v14(candidate: Dict[str, Any]) -> Tuple[str, str]:
+    text = _country_norm_v14(f"{candidate.get('name', '')} {candidate.get('city', '')} {candidate.get('formatted_address', '')}")
+    for needle, country, flight_city in _PLACE_HINTS_V14:
+        if needle in text:
+            return country, flight_city
+    return "", ""
+
+
+def _reverse_geocode_country_city_v14(candidate: Dict[str, Any]) -> Dict[str, str]:
+    lat, lng = _extract_location(candidate)
+    if lat is None or lng is None:
+        return {}
+
+    cache_key = f"{round(float(lat), 5)},{round(float(lng), 5)}"
+    if cache_key in _COUNTRY_CACHE_V14:
+        return dict(_COUNTRY_CACHE_V14[cache_key])
+
+    key = _maps_key()
+    if not key:
+        _COUNTRY_CACHE_V14[cache_key] = {}
+        return {}
+
+    try:
+        params = {
+            "latlng": f"{float(lat)},{float(lng)}",
+            "key": key,
+            "language": "en",
+            "result_type": "country|locality|administrative_area_level_1|administrative_area_level_2",
+        }
+        data = _request_json(GEOCODING_URL, params=params, timeout=8)
+        result: Dict[str, str] = {}
+        for item in data.get("results", []) or []:
+            for comp in item.get("address_components", []) or []:
+                types = set(comp.get("types", []) or [])
+                long_name = comp.get("long_name", "")
+                if "country" in types and not result.get("country"):
+                    cc = _canonical_country_v14(long_name)
+                    if cc:
+                        result["country"] = cc
+                if "locality" in types and not result.get("city"):
+                    result["city"] = long_name
+                if "administrative_area_level_2" in types and not result.get("city"):
+                    result["city"] = long_name
+                if "administrative_area_level_1" in types and not result.get("region"):
+                    result["region"] = long_name
+            if result.get("country") and (result.get("city") or result.get("region")):
+                break
+        if result.get("city") and result.get("city").lower().endswith(" county"):
+            result["city"] = result.get("region") or result["city"]
+        _COUNTRY_CACHE_V14[cache_key] = dict(result)
+        return result
+    except Exception:
+        _COUNTRY_CACHE_V14[cache_key] = {}
+        return {}
+
+
+def _country_from_address_v14(address: str) -> str:
+    parts = [p.strip() for p in str(address or "").split(",") if p.strip()]
+    # Search from right to left, but accept only canonical real countries.
+    for part in reversed(parts):
+        c = _canonical_country_v14(part)
+        if c:
+            return c
+    return ""
+
+
+def _candidate_country_v14(candidate: Dict[str, Any]) -> str:
+    hint_country, _ = _place_hint_country_city_v14(candidate)
+    if hint_country:
+        return _canonical_country_v14(hint_country)
+
+    # Address is safer than old country fields because earlier patches may have
+    # stored invalid values like "01001".
+    addr_country = _country_from_address_v14(str(candidate.get("formatted_address") or ""))
+    if addr_country:
+        return addr_country
+
+    # Coordinates are the most reliable fallback for partial addresses like
+    # "Mt Everest".
+    rev = _reverse_geocode_country_city_v14(candidate)
+    if rev.get("country"):
+        return _canonical_country_v14(rev["country"])
+
+    for key in ("flight_search_country", "country"):
+        c = _canonical_country_v14(candidate.get(key))
+        if c:
+            return c
+
+    return ""
+
+
+def _flight_city_v14(candidate: Dict[str, Any]) -> str:
+    _, hint_city = _place_hint_country_city_v14(candidate)
+    if hint_city:
+        return hint_city
+
+    # Prefer reverse-geocoded locality/region over earlier bad values like CA,
+    # Washington, California, or Mount Everest.
+    rev = _reverse_geocode_country_city_v14(candidate)
+    city = str(rev.get("city") or rev.get("region") or "").strip()
+    if city and _country_norm_v14(city) not in {"ca", "wa", "mt everest", "mount everest", "everest"}:
+        return city
+
+    explicit = str(candidate.get("flight_search_city") or "").strip()
+    bad = {"ca", "wa", "california", "washington", "mt everest", "mount everest", "everest", "01001"}
+    if explicit and _country_norm_v14(explicit) not in bad and not re.search(r"\d", explicit):
+        return explicit
+
+    try:
+        addr_city = _guess_flight_city_from_address(str(candidate.get("formatted_address") or ""))
+        if addr_city and _country_norm_v14(addr_city) not in bad and not re.search(r"\d", addr_city):
+            return addr_city
+    except Exception:
+        pass
+
+    return str(candidate.get("name") or candidate.get("city") or "").strip()
+
+
+# Override the previously patched helper so /simple/frontend receive the same
+# airport-friendly city values.
+def _flight_search_city_for_candidate(candidate: Dict[str, Any]) -> str:
+    return _flight_city_v14(candidate)
+
+
+def _weather_for_candidate_v14(candidate: Dict[str, Any]) -> Dict[str, Any]:
+    lat, lng = _extract_location(candidate)
+    if lat is None or lng is None:
+        return {"climate": "N/A", "weather_error": "missing_coordinates"}
+
+    cache_key = f"{round(float(lat), 3)},{round(float(lng), 3)}"
+    if cache_key in _WEATHER_CACHE_V14:
+        return dict(_WEATHER_CACHE_V14[cache_key])
+
+    timeout = int(os.getenv("WEATHER_API_TIMEOUT_SECONDS", "7") or 7)
+    errors: List[str] = []
+
+    # Open-Meteo current endpoint.
+    try:
+        params = {
+            "latitude": float(lat),
+            "longitude": float(lng),
+            "current": "temperature_2m",
+            "temperature_unit": "celsius",
+            "timezone": "auto",
+        }
+        response = requests.get("https://api.open-meteo.com/v1/forecast", params=params, timeout=timeout)
+        data = response.json() if response.content else {}
+        if response.status_code == 200:
+            current = data.get("current") or {}
+            units = data.get("current_units") or {}
+            temp = current.get("temperature_2m")
+            if temp is not None:
+                temp_value = round(float(temp), 1)
+                unit = units.get("temperature_2m") or "°C"
+                payload = {
+                    "climate": f"{temp_value}{unit}",
+                    "temperature": temp_value,
+                    "temperature_unit": unit,
+                    "weather": {
+                        "provider": "Open-Meteo",
+                        "temperature": temp_value,
+                        "temperature_unit": unit,
+                        "time": current.get("time"),
+                    },
+                }
+                _WEATHER_CACHE_V14[cache_key] = dict(payload)
+                return payload
+            errors.append("temperature_2m_missing")
+        else:
+            errors.append(f"http_{response.status_code}")
+    except Exception as e:
+        errors.append(str(e))
+
+    # Compatibility fallback for older Open-Meteo style.
+    try:
+        params = {
+            "latitude": float(lat),
+            "longitude": float(lng),
+            "current_weather": "true",
+            "temperature_unit": "celsius",
+            "timezone": "auto",
+        }
+        response = requests.get("https://api.open-meteo.com/v1/forecast", params=params, timeout=timeout)
+        data = response.json() if response.content else {}
+        current = data.get("current_weather") or {}
+        temp = current.get("temperature")
+        if response.status_code == 200 and temp is not None:
+            temp_value = round(float(temp), 1)
+            payload = {
+                "climate": f"{temp_value}°C",
+                "temperature": temp_value,
+                "temperature_unit": "°C",
+                "weather": {
+                    "provider": "Open-Meteo",
+                    "temperature": temp_value,
+                    "temperature_unit": "°C",
+                    "time": current.get("time"),
+                },
+            }
+            _WEATHER_CACHE_V14[cache_key] = dict(payload)
+            return payload
+        errors.append(f"fallback_http_{response.status_code}_or_missing_temperature")
+    except Exception as e:
+        errors.append(str(e))
+
+    payload = {"climate": "N/A", "weather_error": "; ".join(errors[-3:])}
+    _WEATHER_CACHE_V14[cache_key] = dict(payload)
+    return payload
+
+
+def _enrich_candidate_v14(candidate: Dict[str, Any], include_weather: bool = True) -> Dict[str, Any]:
+    country = _candidate_country_v14(candidate)
+    if country:
+        candidate["country"] = country
+        candidate["flight_search_country"] = country
+    else:
+        candidate.pop("country", None)
+        candidate.pop("flight_search_country", None)
+
+    candidate["flight_search_city"] = _flight_city_v14(candidate)
+
+    if include_weather:
+        weather_payload = _weather_for_candidate_v14(candidate)
+        # Do not overwrite a good frontend description; only data fields.
+        candidate.update(weather_payload)
+    return candidate
+
+
+def _fill_to_five_countries_v14(candidates: List[Dict[str, Any]], summary: Dict[str, Any], original_terms: List[str], max_candidates: int) -> List[Dict[str, Any]]:
+    kept: List[Dict[str, Any]] = []
+    seen_countries: set[str] = set()
+    seen_names: set[str] = set()
+
+    sorted_candidates = sorted(
+        [c for c in candidates if isinstance(c, dict)],
+        key=lambda c: float((c.get("scores") or {}).get("final_confidence", c.get("final_confidence", 0)) or 0),
+        reverse=True,
+    )
+
+    for c in sorted_candidates:
+        candidate = _enrich_candidate_v14(c, include_weather=False)
+        country = _candidate_country_v14(candidate)
+        if not country:
+            continue
+        ckey = _country_norm_v14(country)
+        nkey = _country_norm_v14(candidate.get("name", ""))
+        if not ckey or ckey in seen_countries or nkey in seen_names:
+            continue
+        seen_countries.add(ckey)
+        if nkey:
+            seen_names.add(nkey)
+        kept.append(candidate)
+        if len(kept) >= max_candidates:
+            break
+
+    category = _visual_category_v2(summary, original_terms) if "_visual_category_v2" in globals() else "generic"
+    fallback_rows = list(_COUNTRY_FALLBACK_ROWS_V12.get(category, [])) + list(_COUNTRY_FALLBACK_ROWS_V12.get("generic", []))
+    for rank, (name, address, lat, lng, country, flight_city) in enumerate(fallback_rows, start=1):
+        country = _canonical_country_v14(country)
+        if not country:
+            continue
+        ckey = _country_norm_v14(country)
+        nkey = _country_norm_v14(name)
+        if ckey in seen_countries or nkey in seen_names:
+            continue
+        candidate = _fallback_candidate_v12(name, address, lat, lng, country, flight_city, category, rank)
+        candidate["country"] = country
+        candidate["flight_search_country"] = country
+        candidate["flight_search_city"] = flight_city
+        kept.append(candidate)
+        seen_countries.add(ckey)
+        seen_names.add(nkey)
+        if len(kept) >= max_candidates:
+            break
+
+    return [_enrich_candidate_v14(c, include_weather=True) for c in kept[:max_candidates]]
+
+
+_old_find_and_rank_places_v14 = find_and_rank_places
+
+
+def find_and_rank_places(
+    summary: Dict[str, Any],
+    original_terms: List[str],
+    max_candidates: int = 5,
+    photos_per_place: int = 2,
+) -> Tuple[List[Dict[str, Any]], List[str]]:
+    pool_size = max(max_candidates * 10, max_candidates + 15)
+    candidates, queries = _old_find_and_rank_places_v14(
+        summary,
+        original_terms,
+        max_candidates=pool_size,
+        photos_per_place=photos_per_place,
+    )
+    final_candidates = _fill_to_five_countries_v14(candidates, summary, original_terms, max_candidates=max_candidates)
+    if "strict_country_weather_v14" not in queries:
+        queries = ["strict_country_weather_v14"] + queries
+    if final_candidates:
+        final_candidates[0].setdefault(
+            "country_diversity_note",
+            "Final suggestions keep five different countries when available; countries are validated from known place hints, address, or reverse geocoding.",
+        )
+    return final_candidates, queries
+
+
+def _frontend_locations(candidates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    locations = []
+    for c in candidates:
+        c = _enrich_candidate_v14(c, include_weather=True)
+        # Preserve the previous working description when present. Avoid replacing
+        # it with weather/country debug text.
+        description = c.get("description")
+        if not description:
+            description = " ".join(c.get("reasons", []))
+        locations.append(
+            {
+                "city": c.get("name", "Unknown place"),
+                "name": c.get("name", "Unknown place"),
+                "country": c.get("country") or _candidate_country_v14(c),
+                "latitude": c.get("latitude"),
+                "longitude": c.get("longitude"),
+                "confidence": c.get("scores", {}).get("final_confidence", c.get("final_confidence", 0)),
+                "climate": c.get("climate") or "N/A",
+                "temperature": c.get("temperature"),
+                "temperature_unit": c.get("temperature_unit"),
+                "weather": c.get("weather"),
+                "weather_error": c.get("weather_error"),
+                "landscape": ", ".join((c.get("types") or [])[:3]),
+                "description": description,
+                "formatted_address": c.get("formatted_address", ""),
+                "maps_url": c.get("maps_url"),
+                "place_id": c.get("place_id"),
+                "flight_search_city": c.get("flight_search_city") or _flight_city_v14(c),
+                "flight_search_country": c.get("flight_search_country") or c.get("country"),
+            }
+        )
+    return locations
+
+
+def _simple_output(full_result: Dict[str, Any]) -> Dict[str, Any]:
+    candidates = full_result.get("location_inference", {}).get("candidate_locations", [])
+    return {
+        "source_input": full_result.get("source_input"),
+        "source_type": full_result.get("source_type"),
+        "media_type": full_result.get("media_type"),
+        "exact_location_found": full_result.get("location_inference", {}).get("exact_location_found", False),
+        "confidence_level": full_result.get("location_inference", {}).get("confidence_level", "low"),
+        "possible_locations": [
+            {
+                "name": _enrich_candidate_v14(c).get("name"),
+                "formatted_address": c.get("formatted_address", ""),
+                "country": c.get("country") or _candidate_country_v14(c),
+                "flight_search_city": c.get("flight_search_city") or _flight_city_v14(c),
+                "flight_search_country": c.get("flight_search_country") or c.get("country"),
+                "climate": c.get("climate") or "N/A",
+                "temperature": c.get("temperature"),
+                "temperature_unit": c.get("temperature_unit"),
+                "coordinates": {"latitude": c.get("latitude"), "longitude": c.get("longitude")},
+            }
+            for c in candidates
+            if c.get("latitude") is not None and c.get("longitude") is not None
+        ],
+    }
+
+
+# ---------------------------------------------------------------------------
+# V15 final UI/country cleanup
+# ---------------------------------------------------------------------------
+# Fixes:
+# - Do not show internal fallback/debug text as the app description.
+# - Reject generic/business web entities (Tower, Pinas Tourism LLC, Real Estate, etc.)
+#   as exact destination signals when a real landmark such as Burj Khalifa exists.
+# - Parse countries/cities from addresses with hyphen-separated parts, especially
+#   Dubai / United Arab Emirates addresses.
+
+_BUSINESS_OR_NOISE_SIGNAL_WORDS_V15 = {
+    "llc", "l.l.c", "real estate", "insurance", "capital", "tourism llc",
+    "tourism", "retail", "agency", "travel agency", "service", "services",
+    "youtube", "image", "photograph", "guide", "moving", "create", "delete",
+    "interesting", "check", "cut", "room", "building", "tower", "skyscraper",
+    "high rise building", "high-rise building", "cityscape", "early skyscrapers",
+    "skyscraper design and construction", "tower defense", "apartment",
+}
+
+_GENERIC_SINGLE_WORD_SIGNALS_V15 = {
+    "tower", "building", "skyscraper", "city", "landmark", "metropolis", "architecture",
+    "street", "beach", "mountain", "hotel", "room", "apartment", "skyline", "cityscape",
+}
+
+_KNOWN_LANDMARK_HINTS_V15 = [
+    ("burj khalifa", "United Arab Emirates", "Dubai"),
+    ("dubai", "United Arab Emirates", "Dubai"),
+    ("marina bay sands", "Singapore", "Singapore"),
+    ("times square", "United States", "New York"),
+    ("shibuya crossing", "Japan", "Tokyo"),
+    ("la défense", "France", "Paris"),
+    ("la defense", "France", "Paris"),
+]
+
+try:
+    _COUNTRY_ALIASES_V14.update({
+        "united arab emirates": "United Arab Emirates",
+        "emirates": "United Arab Emirates",
+        "uae": "United Arab Emirates",
+        "u a e": "United Arab Emirates",
+        "usa": "United States",
+        "u s a": "United States",
+        "united states of america": "United States",
+    })
+except Exception:
+    pass
+
+try:
+    _PLACE_HINTS_V14[:0] = _KNOWN_LANDMARK_HINTS_V15
+except Exception:
+    pass
+
+_old_exact_place_signals_v15 = exact_place_signals_v3
+
+def _is_bad_exact_signal_v15(text: str, source: str = "", score: float = 0.0) -> bool:
+    norm = _country_norm_v14(text) if "_country_norm_v14" in globals() else _term_norm(text)
+    if not norm or len(norm) < 3:
+        return True
+    if norm in _GENERIC_SINGLE_WORD_SIGNALS_V15:
+        return True
+    if norm in _BUSINESS_OR_NOISE_SIGNAL_WORDS_V15:
+        return True
+    if any(w in norm for w in _BUSINESS_OR_NOISE_SIGNAL_WORDS_V15):
+        # Keep known landmarks even if they contain words such as "tower".
+        if not any(h[0] in norm for h in _KNOWN_LANDMARK_HINTS_V15):
+            return True
+    # A single generic word should not become an exact destination just because
+    # Vision scored it as a web entity.
+    toks = _tokens_v3(norm) if "_tokens_v3" in globals() else set(norm.split())
+    if len(toks) <= 1 and source in {"web_entity", "ocr_text"} and not any(h[0] in norm for h in _KNOWN_LANDMARK_HINTS_V15):
+        return True
+    return False
+
+
+def exact_place_signals_v3(summary: Dict[str, Any]) -> List[Dict[str, Any]]:
+    raw = _old_exact_place_signals_v15(summary)
+    filtered: List[Dict[str, Any]] = []
+    seen: set[str] = set()
+
+    for sig in raw:
+        text = str(sig.get("text", "")).strip()
+        source = str(sig.get("source", ""))
+        score = float(sig.get("score", 0) or 0)
+        norm = _country_norm_v14(text) if "_country_norm_v14" in globals() else _term_norm(text)
+        if _is_bad_exact_signal_v15(text, source, score):
+            continue
+        if norm in seen:
+            continue
+        seen.add(norm)
+        filtered.append(sig)
+
+    # Make sure high-confidence known landmarks from web entities are not lost.
+    for ent in (summary.get("web_entities", []) or []):
+        desc = str(ent.get("description", "")).strip()
+        score = float(ent.get("score", 0) or 0)
+        norm = _country_norm_v14(desc)
+        if score >= 0.20 and any(h[0] in norm for h in _KNOWN_LANDMARK_HINTS_V15):
+            if norm not in seen:
+                seen.add(norm)
+                filtered.append({"text": desc, "score": score, "source": "web_entity"})
+
+    filtered.sort(key=lambda x: (float(x.get("score", 0) or 0), len(_tokens_v3(x.get("text", "")) if "_tokens_v3" in globals() else str(x.get("text", "")).split())), reverse=True)
+    return filtered[:10]
+
+
+def _place_hint_country_city_v14(candidate: Dict[str, Any]) -> Tuple[str, str]:
+    text = _country_norm_v14(f"{candidate.get('name', '')} {candidate.get('city', '')} {candidate.get('formatted_address', '')}")
+    for needle, country, flight_city in _KNOWN_LANDMARK_HINTS_V15:
+        if needle in text:
+            return country, flight_city
+    for needle, country, flight_city in _PLACE_HINTS_V14:
+        if needle in text:
+            return country, flight_city
+    return "", ""
+
+
+def _country_from_address_v14(address: str) -> str:
+    raw = str(address or "")
+    norm = _country_norm_v14(raw)
+    # Direct substring checks fix addresses like:
+    # "... - دبي - United Arab Emirates" where comma-based parsing fails.
+    direct = [
+        ("united arab emirates", "United Arab Emirates"),
+        ("united states", "United States"),
+        ("usa", "United States"),
+        ("spain", "Spain"),
+        ("japan", "Japan"),
+        ("france", "France"),
+        ("singapore", "Singapore"),
+        ("nepal", "Nepal"),
+        ("canada", "Canada"),
+        ("italy", "Italy"),
+        ("greece", "Greece"),
+        ("mexico", "Mexico"),
+        ("morocco", "Morocco"),
+        ("jordan", "Jordan"),
+        ("portugal", "Portugal"),
+        ("australia", "Australia"),
+    ]
+    for needle, country in direct:
+        if re.search(rf"\b{re.escape(needle)}\b", norm):
+            return country
+
+    # Split on commas AND hyphen separators. Avoid splitting normal words with
+    # internal hyphens too aggressively by requiring spaces around hyphen.
+    parts = [p.strip() for p in re.split(r",|\s+-\s+|\u060c", raw) if p.strip()]
+    for part in reversed(parts):
+        c = _canonical_country_v14(part)
+        if c:
+            return c
+    return ""
+
+
+def _flight_city_v14(candidate: Dict[str, Any]) -> str:
+    _, hint_city = _place_hint_country_city_v14(candidate)
+    if hint_city:
+        return hint_city
+
+    # Dubai/UAE address fallback.
+    address_norm = _country_norm_v14(candidate.get("formatted_address", ""))
+    if "dubai" in address_norm or "united arab emirates" in address_norm:
+        return "Dubai"
+
+    rev = _reverse_geocode_country_city_v14(candidate)
+    city = str(rev.get("city") or rev.get("region") or "").strip()
+    bad = {"ca", "wa", "california", "washington", "mt everest", "mount everest", "everest", "01001"}
+    if city and _country_norm_v14(city) not in bad and not re.search(r"\d", city):
+        return city
+
+    explicit = str(candidate.get("flight_search_city") or "").strip()
+    if explicit and _country_norm_v14(explicit) not in bad and not re.search(r"\d", explicit):
+        # Do not use company names as flight destinations.
+        if not _is_bad_exact_signal_v15(explicit, "web_entity", 0):
+            return explicit
+
+    try:
+        addr_city = _guess_flight_city_from_address(str(candidate.get("formatted_address") or ""))
+        if addr_city and _country_norm_v14(addr_city) not in bad and not re.search(r"\d", addr_city):
+            return addr_city
+    except Exception:
+        pass
+
+    return str(candidate.get("name") or candidate.get("city") or "").strip()
+
+
+def _destination_description_v15(candidate: Dict[str, Any]) -> str:
+    name = str(candidate.get("name") or candidate.get("city") or "este lugar").strip()
+    country = candidate.get("country") or _candidate_country_v14(candidate)
+    flight_city = candidate.get("flight_search_city") or _flight_city_v14(candidate)
+    address = str(candidate.get("formatted_address") or "").strip()
+    source = str(candidate.get("source") or "")
+
+    if source == "country_diversity_fallback":
+        if flight_city and country:
+            return f"{name} está en {flight_city}, {country}. Es una alternativa visualmente parecida a la imagen; para llegar, busca vuelos a {flight_city}."
+        if country:
+            return f"{name} está en {country}. Es una alternativa visualmente parecida a la imagen."
+        return f"{name} es una alternativa visualmente parecida a la imagen."
+
+    # For real Places/Vision candidates, replace technical reasoning with user-facing location info.
+    if flight_city and country:
+        return f"{name} está en {flight_city}, {country}. Para visitar este lugar, la búsqueda de vuelos se hace hacia {flight_city}."
+    if address:
+        return f"{name} se encuentra en {address}."
+    return " ".join(candidate.get("reasons", [])) or f"Posible lugar detectado: {name}."
+
+
+def _enrich_candidate_v14(candidate: Dict[str, Any], include_weather: bool = True) -> Dict[str, Any]:
+    country = _candidate_country_v14(candidate)
+    if country:
+        candidate["country"] = country
+        candidate["flight_search_country"] = country
+    else:
+        candidate.pop("country", None)
+        candidate.pop("flight_search_country", None)
+
+    candidate["flight_search_city"] = _flight_city_v14(candidate)
+    candidate["description"] = _destination_description_v15(candidate)
+
+    if include_weather:
+        weather_payload = _weather_for_candidate_v14(candidate)
+        candidate.update(weather_payload)
+    return candidate
+
+
+_old_find_and_rank_places_v15 = find_and_rank_places
+
+def find_and_rank_places(
+    summary: Dict[str, Any],
+    original_terms: List[str],
+    max_candidates: int = 5,
+    photos_per_place: int = 2,
+) -> Tuple[List[Dict[str, Any]], List[str]]:
+    # Re-run the V14 pipeline, but with the stricter exact-signal and address
+    # parsing overrides above. Then enrich every final candidate with clean UI text.
+    candidates, queries = _old_find_and_rank_places_v15(
+        summary,
+        original_terms,
+        max_candidates=max_candidates,
+        photos_per_place=photos_per_place,
+    )
+    final = [_enrich_candidate_v14(c, include_weather=True) for c in candidates[:max_candidates]]
+    if "ui_description_country_fix_v15" not in queries:
+        queries = ["ui_description_country_fix_v15"] + queries
+    return final, queries
+
+
+def _frontend_locations(candidates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    locations = []
+    for c in candidates:
+        c = _enrich_candidate_v14(c, include_weather=True)
+        locations.append(
+            {
+                "city": c.get("name", "Unknown place"),
+                "name": c.get("name", "Unknown place"),
+                "country": c.get("country") or _candidate_country_v14(c),
+                "latitude": c.get("latitude"),
+                "longitude": c.get("longitude"),
+                "confidence": c.get("scores", {}).get("final_confidence", c.get("final_confidence", 0)),
+                "climate": c.get("climate") or "N/A",
+                "temperature": c.get("temperature"),
+                "temperature_unit": c.get("temperature_unit"),
+                "weather": c.get("weather"),
+                "weather_error": c.get("weather_error"),
+                "landscape": ", ".join((c.get("types") or [])[:3]),
+                "description": c.get("description") or _destination_description_v15(c),
+                "formatted_address": c.get("formatted_address", ""),
+                "maps_url": c.get("maps_url"),
+                "place_id": c.get("place_id"),
+                "flight_search_city": c.get("flight_search_city") or _flight_city_v14(c),
+                "flight_search_country": c.get("flight_search_country") or c.get("country"),
+            }
+        )
+    return locations
+
+# ---------------------------------------------------------------------------
+# V16 UI description override: natural destination descriptions
+# ---------------------------------------------------------------------------
+# V15 fixed the internal fallback text, but the new description still sounded
+# too artificial and flight-focused. This override keeps all country/city fixes
+# while producing a natural app-facing description like the original UI needed.
+
+_NATURAL_PLACE_DESCRIPTIONS_V16 = {
+    "burj khalifa": "Burj Khalifa es uno de los rascacielos más famosos de Dubai, en United Arab Emirates, conocido por su skyline moderno, sus miradores y su entorno urbano de grandes avenidas y edificios altos.",
+    "times square": "Times Square es una zona emblemática de New York, United States, conocida por sus pantallas luminosas, rascacielos, tiendas, teatros y ambiente urbano muy activo.",
+    "shibuya crossing": "Shibuya Crossing es uno de los cruces urbanos más conocidos de Tokyo, Japan, rodeado de pantallas, tiendas, rascacielos y mucho movimiento peatonal.",
+    "la défense": "La Défense es el gran distrito financiero de Paris, France, reconocido por sus rascacielos, arquitectura moderna, plazas amplias y ambiente urbano contemporáneo.",
+    "la defense": "La Défense es el gran distrito financiero de Paris, France, reconocido por sus rascacielos, arquitectura moderna, plazas amplias y ambiente urbano contemporáneo.",
+    "mount fuji": "Mount Fuji es una montaña volcánica icónica de Japan, cerca de Tokyo, conocida por su silueta nevada, paisajes naturales y vistas panorámicas.",
+    "mount everest": "Mount Everest es la montaña más alta del mundo, situada en la zona del Himalaya en Nepal, conocida por sus paisajes de alta montaña, nieve y rutas de expedición.",
+    "canadian rockies": "Canadian Rockies es una región montañosa de Canada, cerca de Calgary, conocida por sus picos nevados, lagos, bosques y paisajes alpinos.",
+    "mount shasta": "Mount Shasta es una montaña volcánica del norte de California, United States, conocida por su cima nevada, bosques y paisajes naturales.",
+    "mount rainier": "Mount Rainier es una montaña volcánica de Washington, United States, cerca de Seattle, conocida por sus glaciares, bosques y paisajes de alta montaña.",
+}
+
+
+def _natural_category_description_v16(candidate: Dict[str, Any]) -> str:
+    name = str(candidate.get("name") or candidate.get("city") or "Este lugar").strip()
+    country = str(candidate.get("country") or _candidate_country_v14(candidate) or "").strip()
+    city = str(candidate.get("flight_search_city") or _flight_city_v14(candidate) or "").strip()
+    types_text = _country_norm_v14(" ".join(candidate.get("types") or [])) if "_country_norm_v14" in globals() else " ".join(candidate.get("types") or []).lower()
+
+    place_intro = name
+    if city and country and _country_norm_v14(city) != _country_norm_v14(country):
+        place_intro = f"{name} se encuentra en {city}, {country}"
+    elif country:
+        place_intro = f"{name} se encuentra en {country}"
+    else:
+        address = str(candidate.get("formatted_address") or "").strip()
+        if address:
+            place_intro = f"{name} se encuentra en {address}"
+        else:
+            place_intro = name
+
+    if any(w in types_text for w in ["mountain", "peak", "natural_feature", "national_park", "park"]):
+        return f"{place_intro}. Es un destino de naturaleza destacado por sus paisajes, vistas panorámicas y entorno al aire libre."
+    if any(w in types_text for w in ["beach", "coast", "island"]):
+        return f"{place_intro}. Es un destino costero conocido por su paisaje marítimo, zonas de paseo y ambiente turístico."
+    if any(w in types_text for w in ["historical", "landmark", "tourist_attraction", "monument", "palace", "castle", "museum"]):
+        return f"{place_intro}. Es un punto de interés turístico con valor histórico, arquitectónico o cultural."
+    if any(w in types_text for w in ["urban", "city", "square", "skyscraper", "establishment", "point_of_interest"]):
+        return f"{place_intro}. Es una zona urbana destacada por su arquitectura, actividad turística y puntos de interés cercanos."
+    return f"{place_intro}. Es una posible ubicación relacionada con los elementos visuales detectados en la imagen."
+
+
+def _destination_description_v15(candidate: Dict[str, Any]) -> str:
+    """V16 replacement for the V15 description function.
+
+    Important: do not expose internal fallback/debug wording and do not mention
+    flight-search instructions in the description. Flight data remains in
+    flight_search_city / flight_search_country.
+    """
+    name_blob = _country_norm_v14(f"{candidate.get('name', '')} {candidate.get('formatted_address', '')}") if "_country_norm_v14" in globals() else str(candidate.get("name", "")).lower()
+    for needle, desc in _NATURAL_PLACE_DESCRIPTIONS_V16.items():
+        if needle in name_blob:
+            return desc
+
+    # Remove old artificial/internal texts if they are still present in a candidate.
+    old_desc = str(candidate.get("description") or "").strip()
+    old_norm = old_desc.lower()
+    internal_markers = [
+        "added as a visually related alternative",
+        "country_diversity_fallback",
+        "busca vuelos",
+        "búsqueda de vuelos",
+        "para llegar",
+        "exact vision",
+        "resolved exact vision",
+        "prioritized over broad visual fallbacks",
+    ]
+    if old_desc and not any(m in old_norm for m in internal_markers):
+        return old_desc
+
+    return _natural_category_description_v16(candidate)

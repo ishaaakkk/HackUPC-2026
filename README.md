@@ -1,36 +1,65 @@
-# Patch v7: análisis más rápido
+# View it, Visit it — Multi-Modal Travel App (HackUPC 2026)
 
-Sustituye `app/vision_places.py` por el de este ZIP.
+**View it, Visit it** es una aplicación web de viajes de vanguardia que utiliza **Inteligencia Artificial multimodal** y **validación por voz** para ayudarte a descubrir tu próximo destino.
 
-## Qué corrige
+El proyecto está dividido en tres fases lógicas integradas en una experiencia de **Single Page Application (SPA)** premium.
 
-- Evita que el análisis tarde varios minutos.
-- Si Vision detecta un nombre exacto y se resuelve con Places/Geocoding, devuelve ese resultado rápido sin ejecutar el fallback amplio.
-- Limita la comprobación de fotos de Google Places, que era la parte más lenta.
-- Evita que los fallbacks genéricos tipo Colosseum/Acropolis aparezcan cuando ya se ha detectado un lugar exacto.
+---
 
-## Variables opcionales en `.env`
+## 🌟 Características principales
 
-```txt
-LOCATION_FAST_MODE=1
-MAX_PHOTOS_TO_VERIFY=1
-SKIP_PHOTO_CHECK_FOR_EXACT=1
-API_TIMEOUT_SECONDS=12
-PHOTO_TIMEOUT_SECONDS=8
-MAX_BROAD_QUERIES=12
-```
+### Fase 1: Análisis de Imagen y Origen  
+**Vision & Metadata**
 
-Para máxima velocidad:
+- Subida de imagen para identificar destinos probables mediante **Gemini 2.5 Flash**.
+- Detección automática de la ciudad de origen del usuario mediante geolocalización por IP.
 
-```txt
-VERIFY_PLACE_PHOTOS=0
-```
+### Fase 2: Validación y Corrección  
+**Voice UI & Human-in-the-Loop**
 
-Para más precisión, pero más lento:
+- Interfaz moderna para revisar las sugerencias generadas por la IA.
+- Validación por voz para corregir o confirmar destinos hablando directamente al navegador.
+- Transcripción mediante **ElevenLabs** y refinamiento posterior con LLM.
 
-```txt
-SKIP_PHOTO_CHECK_FOR_EXACT=0
-MAX_PHOTOS_TO_VERIFY=2
-```
+### Fase 3: Dashboard de Vuelos y Mapa Interactivo
 
-El error `Failed to fetch` normalmente aparece porque se para el servidor mientras el navegador espera la respuesta, no porque el navegador tenga un bug propio.
+- Búsqueda de vuelos en tiempo real mediante la **API de Skyscanner**.
+- Mapa interactivo con marcadores de precio y arcos de ruta.
+- Panel lateral con imágenes dinámicas de Wikipedia y detalles del destino:
+  - Clima
+  - Paisajes
+  - Hoteles
+  - Información del lugar
+
+---
+
+## 🚀 Guía de inicio rápido
+
+Sigue estos pasos para ejecutar la aplicación en tu entorno local.
+
+Compatible con:
+
+- Linux
+- macOS
+- Windows
+
+---
+
+## 1. Requisitos previos
+
+Necesitarás configurar las siguientes API Keys en tu archivo `.env`:
+
+| Servicio | Uso |
+|---|---|
+| Gemini API Key | Análisis multimodal de imágenes y refinamiento de texto |
+| ElevenLabs API Key | Transcripción de voz a texto con Scribe v1 |
+| Skyscanner API Key | Obtención de ofertas de vuelos reales |
+
+---
+
+## 2. Instalación
+
+Clona el repositorio y entra en la carpeta del proyecto:
+
+```bash
+cd HackUPC2026
