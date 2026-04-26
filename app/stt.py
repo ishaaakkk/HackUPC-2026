@@ -1,15 +1,19 @@
-from elevenlabs.client import ElevenLabs
 import os
-from dotenv import load_dotenv
+import google.generativeai as genai
 
-load_dotenv()
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-client = ElevenLabs(api_key=os.getenv("ELEVENLABS_API_KEY"))
-
-def transcribe_audio(audio_file, language_code: str = "es") -> str:
-    result = client.speech_to_text.convert(
-        file=audio_file,
-        model_id="scribe_v1",
-        language_code=language_code,
-    )
-    return result.text
+def transcribe_audio(audio_file) -> str:
+    audio_bytes = audio_file.read()
+    
+    model = genai.GenerativeModel("gemini-2.5-flash")
+    
+    response = model.generate_content([
+        {
+            "mime_type": "audio/webm",
+            "data": audio_bytes
+        },
+        "Transcribe exactly what is said in this audio. Return only the transcription, nothing else."
+    ])
+    
+    return response.text.strip()
