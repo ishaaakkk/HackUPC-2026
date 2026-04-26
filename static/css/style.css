@@ -287,24 +287,17 @@ h1, h2, h3, h4 {
   cursor: pointer;
 }
 
-/* Image preview inside dropzone */
-.image-preview {
-  display: none;
+/* Target internal preview elements */
+.dropzone .image-preview {
   width: 100%;
   max-height: 300px;
   object-fit: contain;
   border-radius: var(--radius-md);
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
 
-.image-preview.visible {
-  display: block;
-}
-
-.dropzone.has-image .dropzone-icon,
-.dropzone.has-image .dropzone-text,
-.dropzone.has-image .dropzone-hint {
-  display: none;
+.dropzone.has-image {
+  padding: 20px;
 }
 
 /* Origin badge */
@@ -588,22 +581,31 @@ h1, h2, h3, h4 {
   border-radius: 0;
 }
 
+/* --- Dashboard / Leaflet Customizations --- */
+.leaflet-tile {
+  /* Modo claro activado */
+}
+
 /* Custom Leaflet price markers */
 .price-marker {
   background: var(--accent-gradient);
   color: #fff;
-  padding: 6px 12px;
-  border-radius: var(--radius-full);
-  font-size: 0.8rem;
-  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 800;
   font-family: 'Inter', sans-serif;
   white-space: nowrap;
-  box-shadow: var(--shadow-md);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   text-align: center;
   transform: translate(-50%, -50%);
   cursor: pointer;
   transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: max-content;
 }
 
 .price-marker:hover {
