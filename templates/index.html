@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View it, Visit it — Descubre tu próximo destino</title>
+  <meta name="description" content="Sube una imagen de un destino y descubre vuelos baratos con IA multimodal y validación por voz.">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- ===== NAVBAR ===== -->
+    <nav class="navbar">
+      <a class="navbar-brand" href="/">
+        <span class="logo-icon">🌍</span>
+        <span>View it, Visit it</span>
+      </a>
+      <div class="navbar-steps">
+        <div class="step-indicator active" id="step1">
+          <span>📷</span> Imagen
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-indicator" id="step2">
+          <span>🎙️</span> Voz
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-indicator" id="step3">
+          <span>✈️</span> Vuelos
+        </div>
+      </div>
+    </nav>
+
+    <!-- ===== PHASE 1: Image Upload ===== -->
+    <section class="phase active" id="phase1">
+      <div class="upload-container">
+        <h1 class="upload-title">¿A dónde quieres viajar?</h1>
+        <p class="upload-subtitle">Sube una imagen de tu destino soñado y nuestra IA lo identificará</p>
+
+        <div class="dropzone" id="dropzone">
+          <img class="image-preview" id="imagePreview" alt="Preview">
+          <span class="dropzone-icon">📷</span>
+          <p class="dropzone-text">Arrastra una imagen aquí o haz clic para seleccionar</p>
+          <p class="dropzone-hint">JPG, PNG, WebP — máx. 10MB</p>
+          <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <div class="origin-badge" id="originBadge" style="display: none;">
+          <span class="origin-dot"></span>
+          <span>Tu origen: </span>
+          <strong id="originCity">Detectando...</strong>
+        </div>
+
+        <button class="btn-analyze" id="btnAnalyze">
+          <span>✨</span> Analizar imagen
+        </button>
+      </div>
+    </section>
+
+    <!-- ===== PHASE 2: Voice Validation ===== -->
+    <section class="phase" id="phase2">
+      <div class="voice-container">
+        <h2 class="voice-title">📍 Destinos detectados</h2>
+        <p class="voice-subtitle">Confirma los resultados o corrígelos con tu voz</p>
+
+        <div class="locations-grid" id="locationsGrid">
+          <!-- Cards rendered by JS -->
+        </div>
+
+        <div class="mic-section">
+          <button class="mic-btn" id="micBtn" title="Grabar audio">🎙️</button>
+          <p class="mic-status" id="micStatus">Pulsa para grabar</p>
+        </div>
+
+        <div class="transcript-box" id="transcriptBox">
+          <span class="transcript-label">Transcripción</span>
+          <span id="transcriptText"></span>
+        </div>
+
+        <button class="btn-confirm" id="btnConfirm">
+          Confirmar destinos y buscar vuelos →
+        </button>
+      </div>
+    </section>
+
+    <!-- ===== PHASE 3: Flight Dashboard ===== -->
+    <section class="phase" id="phase3">
+      <div class="dashboard-container">
+        <div id="flight-map"></div>
+      </div>
+
+      <!-- Destination detail side panel -->
+      <div class="dest-panel" id="destPanel">
+        <button class="dest-panel-close" id="destPanelClose">✕</button>
+        <img class="dest-panel-image" id="destPanelImage" alt="Destination" src="">
+        <div class="dest-panel-body">
+          <h2 class="dest-panel-city" id="destPanelCity">Ciudad</h2>
+          <p class="dest-panel-country" id="destPanelCountry">País</p>
+          <div class="dest-panel-price" id="destPanelPrice">—</div>
+
+          <div class="dest-info-grid">
+            <div class="dest-info-item">
+              <div class="dest-info-label">📅 Fecha</div>
+              <div class="dest-info-value" id="destPanelDate">N/A</div>
+            </div>
+            <div class="dest-info-item">
+              <div class="dest-info-label">🔄 Escalas</div>
+              <div class="dest-info-value" id="destPanelStops">N/A</div>
+            </div>
+            <div class="dest-info-item">
+              <div class="dest-info-label">🌡️ Clima</div>
+              <div class="dest-info-value" id="destPanelClimate">N/A</div>
+            </div>
+            <div class="dest-info-item">
+              <div class="dest-info-label">🏔️ Paisaje</div>
+              <div class="dest-info-value" id="destPanelLandscape">N/A</div>
+            </div>
+            <div class="dest-info-item">
+              <div class="dest-info-label">🏨 Hotel desde</div>
+              <div class="dest-info-value" id="destPanelHotel">N/A</div>
+            </div>
+          </div>
+
+          <div class="dest-description" id="destPanelDescription">
+            Información del destino
+          </div>
+        </div>
+      </div>
+
+      <!-- Restart button -->
+      <button class="btn-restart" id="btnRestart">
+        ↺ Reiniciar búsqueda
+      </button>
+    </section>
+
+    <!-- ===== Loading Overlay ===== -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-spinner"></div>
+      <p class="loading-text" id="loadingText">Procesando...</p>
+    </div>
+
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- App JS -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
