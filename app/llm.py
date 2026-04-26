@@ -10,10 +10,10 @@ load_dotenv()
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 
-def analyze_image_for_locations(image_bytes: bytes, mime_type: str = "image/jpeg") -> dict:
+def analyze_media_for_locations(file_path: str, mime_type: str = "image/jpeg") -> dict:
     """
-    Sends an image to Gemini multimodal and asks it to identify
-    possible travel destinations shown in the image.
+    Uploads an image or video to Gemini and asks it to identify
+    possible travel destinations shown in the media.
     Returns a dict with a 'locations' list.
     """
 
@@ -37,20 +37,31 @@ FORMATO DE RESPUESTA (JSON estricto, sin markdown):
       "confidence": 0.0,
       "climate": "Tipo de clima (ej: Tropical, Mediterráneo, Continental...)",
       "landscape": "Tipo de paisaje (ej: Playa, Montaña, Urbano, Histórico...)",
-      "description": "Breve descripción de por qué esta ubicación coincide con la imagen"
+      "description": "Breve descripción de por qué esta ubicación coincide con la imagen o video"
     }
   ]
 }
 
 Responde SOLO con el JSON, sin ningún texto adicional ni bloques de código."""
 
-    image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
+    uploaded_file = None
+    try:
+        # Upload the file to Gemini (required for videos, highly recommended for large images)
+        uploaded_file = client.files.upload(file=file_path, config={'mime_type': mime_type})
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=[prompt, image_part],
-    )
-    text = response.text.strip()
+        # Generate content
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[prompt, uploaded_file],
+        )
+        text = response.text.strip()
+    finally:
+        # Always clean up the file from Gemini storage
+        if uploaded_file:
+            try:
+                client.files.delete(name=uploaded_file.name)
+            except Exception as e:
+                print(f"Warning: could not delete file from Gemini: {e}")
 
     # Clean markdown code fences if present
     if text.startswith("```"):

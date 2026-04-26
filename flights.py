@@ -259,7 +259,8 @@ class SkyscannerOptimizer:
                     except:
                         obs_str = "Reciente"
 
-                price_val = f"{flight_info['price']} {self.config['currency']}"
+                price_int = int(float(flight_info['price']))
+                price_val = f"{price_int} €"
                 if via_airport: price_val += f" (vía {via_airport})"
                 
                 is_direct = flight_info.get("is_direct", False)

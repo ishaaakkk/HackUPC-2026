@@ -43,12 +43,18 @@
         <p class="upload-subtitle">Sube una imagen de tu destino soñado y nuestra IA lo identificará</p>
 
         <div class="dropzone" id="dropzone">
-          <img class="image-preview" id="imagePreview" alt="Preview">
-          <span class="dropzone-icon">📷</span>
-          <p class="dropzone-text">Arrastra una imagen aquí o haz clic para seleccionar</p>
-          <p class="dropzone-hint">JPG, PNG, WebP — máx. 10MB</p>
-          <input type="file" id="fileInput" accept="image/*">
+          <img class="image-preview" id="imagePreview" alt="Preview" style="display: none;">
+          <video class="image-preview" id="videoPreview" controls style="display: none;"></video>
+          <span class="dropzone-icon" id="dropzoneIcon">📷 / 🎥</span>
+          <p class="dropzone-text" id="dropzoneText">Arrastra una imagen o video aquí o haz clic para seleccionar</p>
+          <p class="dropzone-hint" id="dropzoneHint">JPG, PNG, WebP, MP4, MOV — máx. 50MB</p>
+          <input type="file" id="fileInput" accept="image/*,video/*">
         </div>
+        
+        <div style="margin-top: 15px; width: 100%;">
+          <input type="url" id="urlInput" placeholder="🔗 O pega la URL de una imagen/video aquí" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); color: white; border-radius: 8px; font-family: inherit;">
+        </div>
+
 
         <div class="origin-badge" id="originBadge" style="display: none;">
           <span class="origin-dot"></span>
