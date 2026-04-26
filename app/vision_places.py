@@ -2128,3 +2128,118 @@ def find_and_rank_places(
         c.setdefault("speed_mode", {})
         c["speed_mode"].setdefault("analysis_seconds", round(_time_v7.time() - start, 2))
     return candidates, queries
+
+# ---------------------------------------------------------------------------
+# V8 deduplication override: prevent repeated recommended places
+# ---------------------------------------------------------------------------
+# Google Places can return the same location from several generated queries or
+# from different resolver APIs. This final override deduplicates the final list
+# by place_id, normalized name/address, and near-identical coordinates before
+# it is returned to the frontend and before output_location.json / the simple
+# JSON are created.
+
+import unicodedata as _unicodedata_v8
+import difflib as _difflib_v8
+
+
+def _dedupe_norm_v8(value: Any) -> str:
+    text = str(value or "").strip().lower()
+    text = _unicodedata_v8.normalize("NFKD", text)
+    text = "".join(ch for ch in text if not _unicodedata_v8.combining(ch))
+    text = re.sub(r"[^a-z0-9]+", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def _dedupe_place_id_v8(candidate: Dict[str, Any]) -> str:
+    return str(candidate.get("place_id") or "").strip()
+
+
+def _dedupe_lat_lng_v8(candidate: Dict[str, Any]) -> Tuple[Optional[float], Optional[float]]:
+    return _extract_location(candidate)
+
+
+def _dedupe_name_v8(candidate: Dict[str, Any]) -> str:
+    return _dedupe_norm_v8(candidate.get("name") or candidate.get("city") or "")
+
+
+def _dedupe_address_v8(candidate: Dict[str, Any]) -> str:
+    return _dedupe_norm_v8(candidate.get("formatted_address") or candidate.get("country") or "")
+
+
+def _is_duplicate_candidate_v8(candidate: Dict[str, Any], kept: List[Dict[str, Any]]) -> bool:
+    pid = _dedupe_place_id_v8(candidate)
+    name = _dedupe_name_v8(candidate)
+    address = _dedupe_address_v8(candidate)
+    lat, lng = _dedupe_lat_lng_v8(candidate)
+
+    for existing in kept:
+        existing_pid = _dedupe_place_id_v8(existing)
+        existing_name = _dedupe_name_v8(existing)
+        existing_address = _dedupe_address_v8(existing)
+        existing_lat, existing_lng = _dedupe_lat_lng_v8(existing)
+
+        if pid and existing_pid and pid == existing_pid:
+            return True
+
+        if name and existing_name and name == existing_name:
+            if not address or not existing_address or address == existing_address:
+                return True
+
+        if lat is not None and lng is not None and existing_lat is not None and existing_lng is not None:
+            close_coordinates = abs(lat - existing_lat) <= 0.00025 and abs(lng - existing_lng) <= 0.00025
+            if close_coordinates:
+                if name and existing_name:
+                    ratio = _difflib_v8.SequenceMatcher(None, name, existing_name).ratio()
+                    if ratio >= 0.74 or name in existing_name or existing_name in name:
+                        return True
+                elif address and existing_address and address == existing_address:
+                    return True
+
+        if address and existing_address and address == existing_address and name and existing_name:
+            ratio = _difflib_v8.SequenceMatcher(None, name, existing_name).ratio()
+            if ratio >= 0.72 or name in existing_name or existing_name in name:
+                return True
+
+    return False
+
+
+def dedupe_candidate_locations_v8(candidates: List[Dict[str, Any]], max_candidates: Optional[int] = None) -> List[Dict[str, Any]]:
+    if not candidates:
+        return []
+
+    sorted_candidates = sorted(
+        [c for c in candidates if isinstance(c, dict)],
+        key=lambda c: float((c.get("scores") or {}).get("final_confidence", c.get("final_confidence", 0)) or 0),
+        reverse=True,
+    )
+
+    exact_first = [c for c in sorted_candidates if str(c.get("source", "")).startswith("vision_")]
+    others = [c for c in sorted_candidates if c not in exact_first]
+
+    kept: List[Dict[str, Any]] = []
+    for candidate in exact_first + others:
+        if _is_duplicate_candidate_v8(candidate, kept):
+            continue
+        kept.append(candidate)
+        if max_candidates is not None and len(kept) >= max_candidates:
+            break
+    return kept
+
+
+_old_find_and_rank_places_v8 = find_and_rank_places
+
+
+def find_and_rank_places(
+    summary: Dict[str, Any],
+    original_terms: List[str],
+    max_candidates: int = 5,
+    photos_per_place: int = 2,
+) -> Tuple[List[Dict[str, Any]], List[str]]:
+    candidates, queries = _old_find_and_rank_places_v8(
+        summary,
+        original_terms,
+        max_candidates=max_candidates * 3,
+        photos_per_place=photos_per_place,
+    )
+    return dedupe_candidate_locations_v8(candidates, max_candidates=max_candidates), queries
