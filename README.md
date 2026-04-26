@@ -66,6 +66,9 @@ python main.py
 
 El servidor estará disponible en: **`http://localhost:7999`**
 
+### 5. Deployed web
+https://hackupc-api.onrender.com/
+
 ---
 
 ## 🛠️ Tecnologías Utilizadas
