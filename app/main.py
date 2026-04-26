@@ -1,24 +1,66 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Request
-from app.stt import transcribe_audio
-from app.llm import analyze_image_for_locations, refine_locations_with_voice
+
+from app.llm import refine_locations_with_voice
 import json
 import requests as http_requests
 
 router = APIRouter(prefix="/api")
 
 
-# ---------- PHASE 1: Image Analysis ----------
+import tempfile
+import urllib.request
+import os
 
-@router.post("/analyze-image")
-async def analyze_image(image: UploadFile = File(...)):
-    """Receives an image, analyzes it with Gemini multimodal, returns candidate locations."""
+# ---------- PHASE 1: Media Analysis ----------
+
+@router.post("/analyze-media")
+async def analyze_media(
+    media: UploadFile = File(None),
+    url: str = Form(None)
+):
+    """Receives an image/video file or URL, analyzes it with Gemini multimodal, returns candidate locations."""
+    if not media and not url:
+        raise HTTPException(status_code=400, detail="Must provide either media file or url")
+
+    tmp_file = None
     try:
-        image_bytes = await image.read()
-        mime_type = image.content_type or "image/jpeg"
-        result = analyze_image_for_locations(image_bytes, mime_type)
+        # Create a temporary file
+        fd, tmp_path = tempfile.mkstemp()
+        os.close(fd)
+        tmp_file = tmp_path
+
+        mime_type = "image/jpeg"
+        if media:
+            content = await media.read()
+            with open(tmp_path, "wb") as f:
+                f.write(content)
+            if media.content_type:
+                mime_type = media.content_type
+        elif url:
+            # Download URL
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req) as response:
+                content = response.read()
+            with open(tmp_path, "wb") as f:
+                f.write(content)
+            # guess mime from URL extending
+            if url.lower().endswith(".mp4"): mime_type = "video/mp4"
+            elif url.lower().endswith(".png"): mime_type = "image/png"
+            elif url.lower().endswith(".webm"): mime_type = "video/webm"
+            else: mime_type = "image/jpeg"
+
+        # Pass file path to the LLM function
+        from app.llm import analyze_media_for_locations
+        result = analyze_media_for_locations(tmp_path, mime_type)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error analyzing image: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error analyzing media: {str(e)}")
+    finally:
+        if tmp_file and os.path.exists(tmp_file):
+            try:
+                os.remove(tmp_file)
+            except:
+                pass
 
 
 @router.get("/detect-origin")
@@ -96,34 +138,25 @@ async def detect_origin(request: Request):
 
 # ---------- PHASE 2: Voice Validation ----------
 
+# A esto:
 @router.post("/voice-validate")
 async def voice_validate(
-    audio: UploadFile = File(...),
+    transcript: str = Form(...),
     locations: str = Form(...)
 ):
-    """
-    Receives audio + current locations JSON.
-    Transcribes audio, then asks Gemini to refine/correct the locations.
-    """
     try:
         locations_list = json.loads(locations)
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="'locations' is not valid JSON")
 
     try:
-        # Transcribe audio with ElevenLabs
-        transcript = transcribe_audio(audio.file)
-
-        # Refine locations with Gemini
         result = refine_locations_with_voice(locations_list, transcript)
-
         return {
             "transcript": transcript,
             "locations": result.get("locations", locations_list)
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing voice: {str(e)}")
-
 
 # ---------- PHASE 3: Flight Search ----------
 
