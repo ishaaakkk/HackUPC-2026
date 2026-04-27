@@ -1,0 +1,79 @@
+{
+  "source_input": "shanghai.png",
+  "source_type": "file_upload",
+  "media_type": "image",
+  "exact_location_found": true,
+  "confidence_level": "high",
+  "possible_locations": [
+    {
+      "name": "Burj Khalifa",
+      "formatted_address": "1 Sheikh Mohammed bin Rashid Blvd - Burj Khalifa - Downtown Dubai - Dubai - United Arab Emirates",
+      "country": "United Arab Emirates",
+      "flight_search_city": "Dubai",
+      "flight_search_country": "United Arab Emirates",
+      "climate": "33.2°C",
+      "temperature": 33.2,
+      "temperature_unit": "°C",
+      "coordinates": {
+        "latitude": 25.197197,
+        "longitude": 55.274376399999994
+      }
+    },
+    {
+      "name": "Shanghai World Financial Center",
+      "formatted_address": "Shang Hai Huan Qiu Jin Rong Zhong Xin, 数浦港 Pu Dong Xin Qu, Shang Hai Shi, China, 200120",
+      "country": "China",
+      "flight_search_city": "China",
+      "flight_search_country": "China",
+      "climate": "22.4°C",
+      "temperature": 22.4,
+      "temperature_unit": "°C",
+      "coordinates": {
+        "latitude": 31.2343843,
+        "longitude": 121.5078265
+      }
+    },
+    {
+      "name": "Times Square",
+      "formatted_address": "New York, USA",
+      "country": "United States",
+      "flight_search_city": "New York",
+      "flight_search_country": "United States",
+      "climate": "5.3°C",
+      "temperature": 5.3,
+      "temperature_unit": "°C",
+      "coordinates": {
+        "latitude": 40.758,
+        "longitude": -73.9855
+      }
+    },
+    {
+      "name": "Shibuya Crossing",
+      "formatted_address": "Tokyo, Japan",
+      "country": "Japan",
+      "flight_search_city": "Tokyo",
+      "flight_search_country": "Japan",
+      "climate": "13.7°C",
+      "temperature": 13.7,
+      "temperature_unit": "°C",
+      "coordinates": {
+        "latitude": 35.6595,
+        "longitude": 139.7005
+      }
+    },
+    {
+      "name": "Plaça de Catalunya",
+      "formatted_address": "Barcelona, Spain",
+      "country": "Spain",
+      "flight_search_city": "Barcelona",
+      "flight_search_country": "Spain",
+      "climate": "21.8°C",
+      "temperature": 21.8,
+      "temperature_unit": "°C",
+      "coordinates": {
+        "latitude": 41.387,
+        "longitude": 2.1701
+      }
+    }
+  ]
+}

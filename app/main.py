@@ -24,6 +24,10 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
+def is_demo_mode() -> bool:
+    return os.getenv("DEMO_MODE", "0").lower() in ("1", "true", "yes")
+
+
 def _parse_destinations(destinations: str) -> List[Any]:
     """Accepts either a comma-separated string or a JSON array of destination objects."""
     raw = (destinations or "").strip()
@@ -220,6 +224,14 @@ async def analyze_media(
     url: str = Form(None)
 ):
     """Receives an image/video file or URL and analyzes it with Vision + Places."""
+    if is_demo_mode():
+        mock_path = PROJECT_ROOT / "output_location.json"
+        if mock_path.exists():
+            with open(mock_path, "r") as f:
+                return json.load(f)
+        else:
+            return {"note": "DEMO_MODE active but output_location.json not found"}
+
     if not media and not url:
         raise HTTPException(status_code=400, detail="Must provide either media file or url")
 
@@ -404,6 +416,14 @@ def search_flights(origin: str, destinations: str, date: str = "2026"):
     """Searches flights. Destinations can be names or JSON objects from the image-analysis step."""
     from flights import SkyscannerOptimizer
     from hotels import HotelSearcher
+
+    if is_demo_mode():
+        mock_path = Path(__file__).parent / "mock_flights.json"
+        if mock_path.exists():
+            with open(mock_path, "r") as f:
+                return json.load(f)
+        else:
+            raise HTTPException(status_code=500, detail="DEMO_MODE active but mock_flights.json not found")
 
     api_key = os.getenv("SKYSCANNER_API_KEY")
     if not api_key:

@@ -1,0 +1,1339 @@
+{
+  "source_input": "shanghai.png",
+  "source_type": "file_upload",
+  "media_type": "image",
+  "content_type": "image/png",
+  "analyzed_images": [
+    {
+      "image_path": "/tmp/tmpio8rncpp.png",
+      "labels": [
+        {
+          "description": "Skyscraper",
+          "score": 0.9926396
+        },
+        {
+          "description": "Sky",
+          "score": 0.990997
+        },
+        {
+          "description": "Building",
+          "score": 0.984533
+        },
+        {
+          "description": "City",
+          "score": 0.9844591
+        },
+        {
+          "description": "Urban area",
+          "score": 0.98255944
+        },
+        {
+          "description": "Daytime",
+          "score": 0.98177814
+        },
+        {
+          "description": "Metropolitan area",
+          "score": 0.97715175
+        },
+        {
+          "description": "High-rise building",
+          "score": 0.97552055
+        },
+        {
+          "description": "Tower",
+          "score": 0.9612103
+        },
+        {
+          "description": "Cityscape",
+          "score": 0.9602655
+        },
+        {
+          "description": "Metropolis",
+          "score": 0.9481023
+        },
+        {
+          "description": "Commercial building",
+          "score": 0.9454032
+        },
+        {
+          "description": "Skyline",
+          "score": 0.93639404
+        },
+        {
+          "description": "Architecture",
+          "score": 0.9280621
+        },
+        {
+          "description": "Landmark",
+          "score": 0.92586243
+        },
+        {
+          "description": "Condominium",
+          "score": 0.91469705
+        },
+        {
+          "description": "Human settlement",
+          "score": 0.88807964
+        },
+        {
+          "description": "Mixed-use",
+          "score": 0.830538
+        },
+        {
+          "description": "Headquarters",
+          "score": 0.82672644
+        },
+        {
+          "description": "Apartment",
+          "score": 0.8252307
+        }
+      ],
+      "landmarks": [
+        {
+          "description": "Shanghai Tower",
+          "lat": 31.233518000000004,
+          "lng": 121.505618,
+          "score": 0.7343227
+        },
+        {
+          "description": "Oriental Pearl Tv Tower",
+          "lat": 31.239688899999997,
+          "lng": 121.49975529999999,
+          "score": 0.4910404
+        },
+        {
+          "description": "Shanghai World Financial Center",
+          "lat": 31.2345644,
+          "lng": 121.5074394,
+          "score": 0.42348439
+        }
+      ],
+      "logos": [],
+      "safe_search": {
+        "adult": "VERY_UNLIKELY",
+        "spoof": "VERY_UNLIKELY",
+        "medical": "VERY_UNLIKELY",
+        "violence": "VERY_UNLIKELY",
+        "racy": "VERY_UNLIKELY"
+      },
+      "text": "",
+      "web_entities": [
+        {
+          "description": "Shanghai Tower",
+          "score": 2.1405876
+        },
+        {
+          "description": "Jin Mao Tower",
+          "score": 1.1773561
+        },
+        {
+          "description": "Shanghai World Financial Center",
+          "score": 1.1327744
+        },
+        {
+          "description": "广州塔",
+          "score": 0.9646725
+        },
+        {
+          "description": "Burj Khalifa",
+          "score": 0.80039996
+        },
+        {
+          "description": "Building",
+          "score": 0.7052
+        },
+        {
+          "description": "Tower",
+          "score": 0.69514763
+        },
+        {
+          "description": "Skyscraper",
+          "score": 0.6942763
+        },
+        {
+          "description": "Architecture",
+          "score": 0.5494
+        },
+        {
+          "description": "History of the world's tallest buildings",
+          "score": 0.4484
+        },
+        {
+          "description": "Construction",
+          "score": 0.4183
+        },
+        {
+          "description": "High-rise building",
+          "score": 0.3799
+        },
+        {
+          "description": "Shanghai",
+          "score": 6.8348556e-05
+        },
+        {
+          "description": "China",
+          "score": 1.0830339e-07
+        }
+      ]
+    }
+  ],
+  "visual_summary": {
+    "labels": [
+      {
+        "description": "Skyscraper",
+        "score": 0.9926396
+      },
+      {
+        "description": "Sky",
+        "score": 0.990997
+      },
+      {
+        "description": "Building",
+        "score": 0.984533
+      },
+      {
+        "description": "City",
+        "score": 0.9844591
+      },
+      {
+        "description": "Urban area",
+        "score": 0.98255944
+      },
+      {
+        "description": "Daytime",
+        "score": 0.98177814
+      },
+      {
+        "description": "Metropolitan area",
+        "score": 0.97715175
+      },
+      {
+        "description": "High-rise building",
+        "score": 0.97552055
+      },
+      {
+        "description": "Tower",
+        "score": 0.9612103
+      },
+      {
+        "description": "Cityscape",
+        "score": 0.9602655
+      },
+      {
+        "description": "Metropolis",
+        "score": 0.9481023
+      },
+      {
+        "description": "Commercial building",
+        "score": 0.9454032
+      },
+      {
+        "description": "Skyline",
+        "score": 0.93639404
+      },
+      {
+        "description": "Architecture",
+        "score": 0.9280621
+      },
+      {
+        "description": "Landmark",
+        "score": 0.92586243
+      }
+    ],
+    "landmarks": [
+      {
+        "description": "Shanghai Tower",
+        "lat": 31.233518000000004,
+        "lng": 121.505618,
+        "score": 0.7343227
+      },
+      {
+        "description": "Oriental Pearl Tv Tower",
+        "lat": 31.239688899999997,
+        "lng": 121.49975529999999,
+        "score": 0.4910404
+      },
+      {
+        "description": "Shanghai World Financial Center",
+        "lat": 31.2345644,
+        "lng": 121.5074394,
+        "score": 0.42348439
+      }
+    ],
+    "logos": [],
+    "text": "",
+    "web_entities": [
+      {
+        "description": "Shanghai Tower",
+        "score": 2.1405876
+      },
+      {
+        "description": "Jin Mao Tower",
+        "score": 1.1773561
+      },
+      {
+        "description": "Shanghai World Financial Center",
+        "score": 1.1327744
+      },
+      {
+        "description": "广州塔",
+        "score": 0.9646725
+      },
+      {
+        "description": "Burj Khalifa",
+        "score": 0.80039996
+      },
+      {
+        "description": "Building",
+        "score": 0.7052
+      },
+      {
+        "description": "Tower",
+        "score": 0.69514763
+      },
+      {
+        "description": "Skyscraper",
+        "score": 0.6942763
+      },
+      {
+        "description": "Architecture",
+        "score": 0.5494
+      },
+      {
+        "description": "History of the world's tallest buildings",
+        "score": 0.4484
+      },
+      {
+        "description": "Construction",
+        "score": 0.4183
+      },
+      {
+        "description": "High-rise building",
+        "score": 0.3799
+      },
+      {
+        "description": "Shanghai",
+        "score": 6.8348556e-05
+      },
+      {
+        "description": "China",
+        "score": 1.0830339e-07
+      }
+    ]
+  },
+  "visual_terms_used_for_matching": [
+    "skyscraper",
+    "tower",
+    "cityscape",
+    "metropolis",
+    "skyline",
+    "landmark",
+    "shanghai tower",
+    "jin mao tower",
+    "shanghai world financial center",
+    "burj khalifa",
+    "history of the world's tallest buildings",
+    "construction",
+    "oriental pearl tv tower"
+  ],
+  "location_inference": {
+    "candidate_locations": [
+      {
+        "name": "Burj Khalifa",
+        "formatted_address": "1 Sheikh Mohammed bin Rashid Blvd - Burj Khalifa - Downtown Dubai - Dubai - United Arab Emirates",
+        "latitude": 25.197197,
+        "longitude": 55.274376399999994,
+        "coordinates": {
+          "latitude": 25.197197,
+          "longitude": 55.274376399999994
+        },
+        "place_id": "ChIJS-JnijRDXz4R4rfO4QLlRf8",
+        "query_used": "Burj Khalifa",
+        "rating": 4.7,
+        "types": [
+          "landmark",
+          "tourist_attraction",
+          "point_of_interest",
+          "establishment"
+        ],
+        "matched_exact_signals": [
+          {
+            "text": "Burj Khalifa",
+            "score": 0.80039996,
+            "source": "web_entity",
+            "match": 1.0,
+            "matched_terms": [
+              "burj khalifa"
+            ]
+          }
+        ],
+        "matched_visual_terms": [],
+        "photos_checked": [
+          {
+            "skipped": true,
+            "reason": "Exact Vision place name resolved; photo verification skipped for speed. Set SKIP_PHOTO_CHECK_FOR_EXACT=0 to enable."
+          }
+        ],
+        "scores": {
+          "query_relevance": 1.0,
+          "vision_entity_match": 1.0,
+          "best_photo_visual_similarity": 0.0,
+          "final_confidence": 0.8400000000000001,
+          "exact_signal_score": 0.80039996,
+          "broad_query_penalty": 0.0
+        },
+        "final_confidence": 0.8400000000000001,
+        "reasons": [
+          "Resolved exact Vision web entity signal: Burj Khalifa.",
+          "This exact detected name is prioritized over broad visual fallbacks."
+        ],
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Burj%20Khalifa%201%20Sheikh%20Mohammed%20bin%20Rashid%20Blvd%20-%20Burj%20Khalifa%20-%20Downtown%20Dubai%20-%20Dubai%20-%20United%20Arab%20Emirates",
+        "source": "vision_web_entity_resolved",
+        "speed_mode": {
+          "exact_signal_short_circuit": true,
+          "photo_check_skipped_for_exact": true,
+          "returned_without_broad_fallback": true,
+          "analysis_seconds": 3.98
+        },
+        "flight_search_city": "Dubai",
+        "country": "United Arab Emirates",
+        "flight_search_country": "United Arab Emirates",
+        "country_dedupe": {
+          "kept": true,
+          "country_key": "1 sheikh mohammed bin rashid blvd burj khalifa downtown dubai dubai united arab emirates"
+        },
+        "country_diversity_note": "Image suggestions are filtered to keep at most one candidate per country.",
+        "climate": "33.2°C",
+        "temperature": 33.2,
+        "temperature_unit": "°C",
+        "weather": {
+          "provider": "Open-Meteo",
+          "temperature": 33.2,
+          "temperature_unit": "°C",
+          "time": "2026-04-27T15:00"
+        },
+        "description": "Burj Khalifa es uno de los rascacielos más famosos de Dubai, en United Arab Emirates, conocido por su skyline moderno, sus miradores y su entorno urbano de grandes avenidas y edificios altos."
+      },
+      {
+        "name": "Shanghai World Financial Center",
+        "formatted_address": "Shang Hai Huan Qiu Jin Rong Zhong Xin, 数浦港 Pu Dong Xin Qu, Shang Hai Shi, China, 200120",
+        "latitude": 31.2343843,
+        "longitude": 121.5078265,
+        "coordinates": {
+          "latitude": 31.2343843,
+          "longitude": 121.5078265
+        },
+        "place_id": "ChIJTTWxwuVwsjURqxsZyB-YTQo",
+        "query_used": "Shanghai World Financial Center",
+        "rating": null,
+        "types": [
+          "premise",
+          "street_address"
+        ],
+        "matched_exact_signals": [
+          {
+            "text": "Shanghai World Financial Center",
+            "score": 0.7734843899999999,
+            "source": "landmark",
+            "match": 1.0,
+            "matched_terms": [
+              "shanghai world financial center"
+            ]
+          }
+        ],
+        "matched_visual_terms": [],
+        "photos_checked": [
+          {
+            "skipped": true,
+            "reason": "Exact Vision place name resolved; photo verification skipped for speed. Set SKIP_PHOTO_CHECK_FOR_EXACT=0 to enable."
+          }
+        ],
+        "scores": {
+          "query_relevance": 1.0,
+          "vision_entity_match": 0.9933710975,
+          "best_photo_visual_similarity": 0.0,
+          "final_confidence": 0.8381439073000001,
+          "exact_signal_score": 0.7734843899999999,
+          "broad_query_penalty": 0.0
+        },
+        "final_confidence": 0.8381439073000001,
+        "reasons": [
+          "Resolved exact Vision landmark signal: Shanghai World Financial Center.",
+          "This exact detected name is prioritized over broad visual fallbacks."
+        ],
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Shanghai%20World%20Financial%20Center%20Shang%20Hai%20Huan%20Qiu%20Jin%20Rong%20Zhong%20Xin%2C%20%E6%95%B0%E6%B5%A6%E6%B8%AF%20Pu%20Dong%20Xin%20Qu%2C%20Shang%20Hai%20Shi%2C%20China%2C%20200120",
+        "source": "vision_landmark_resolved",
+        "speed_mode": {
+          "exact_signal_short_circuit": true,
+          "photo_check_skipped_for_exact": true,
+          "returned_without_broad_fallback": true,
+          "analysis_seconds": 3.98
+        },
+        "flight_search_city": "China",
+        "country": "China",
+        "flight_search_country": "China",
+        "country_dedupe": {
+          "kept": true,
+          "country_key": "200120"
+        },
+        "climate": "22.4°C",
+        "temperature": 22.4,
+        "temperature_unit": "°C",
+        "weather": {
+          "provider": "Open-Meteo",
+          "temperature": 22.4,
+          "temperature_unit": "°C",
+          "time": "2026-04-27T19:00"
+        },
+        "description": "Shanghai World Financial Center se encuentra en China. Es una posible ubicación relacionada con los elementos visuales detectados en la imagen."
+      },
+      {
+        "name": "Times Square",
+        "formatted_address": "New York, USA",
+        "latitude": 40.758,
+        "longitude": -73.9855,
+        "coordinates": {
+          "latitude": 40.758,
+          "longitude": -73.9855
+        },
+        "place_id": null,
+        "query_used": "country_diversity_fallback:urban",
+        "rating": null,
+        "types": [
+          "country_diversity_fallback",
+          "urban"
+        ],
+        "matched_exact_signals": [],
+        "matched_visual_terms": [],
+        "photos_checked": [],
+        "scores": {
+          "query_relevance": 0.0,
+          "vision_entity_match": 0.0,
+          "best_photo_visual_similarity": 0.0,
+          "final_confidence": 0.39499999999999996
+        },
+        "final_confidence": 0.39499999999999996,
+        "reasons": [
+          "Added as a visually related alternative to keep five suggestions from different countries."
+        ],
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Times%20Square%20New%20York%2C%20USA",
+        "source": "country_diversity_fallback",
+        "country": "United States",
+        "flight_search_country": "United States",
+        "flight_search_city": "New York",
+        "climate": "5.3°C",
+        "temperature": 5.3,
+        "temperature_unit": "°C",
+        "weather": {
+          "provider": "Open-Meteo",
+          "temperature": 5.3,
+          "temperature_unit": "°C",
+          "time": "2026-04-27T07:00"
+        },
+        "description": "Times Square es una zona emblemática de New York, United States, conocida por sus pantallas luminosas, rascacielos, tiendas, teatros y ambiente urbano muy activo."
+      },
+      {
+        "name": "Shibuya Crossing",
+        "formatted_address": "Tokyo, Japan",
+        "latitude": 35.6595,
+        "longitude": 139.7005,
+        "coordinates": {
+          "latitude": 35.6595,
+          "longitude": 139.7005
+        },
+        "place_id": null,
+        "query_used": "country_diversity_fallback:urban",
+        "rating": null,
+        "types": [
+          "country_diversity_fallback",
+          "urban"
+        ],
+        "matched_exact_signals": [],
+        "matched_visual_terms": [],
+        "photos_checked": [],
+        "scores": {
+          "query_relevance": 0.0,
+          "vision_entity_match": 0.0,
+          "best_photo_visual_similarity": 0.0,
+          "final_confidence": 0.37
+        },
+        "final_confidence": 0.37,
+        "reasons": [
+          "Added as a visually related alternative to keep five suggestions from different countries."
+        ],
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Shibuya%20Crossing%20Tokyo%2C%20Japan",
+        "source": "country_diversity_fallback",
+        "country": "Japan",
+        "flight_search_country": "Japan",
+        "flight_search_city": "Tokyo",
+        "climate": "13.7°C",
+        "temperature": 13.7,
+        "temperature_unit": "°C",
+        "weather": {
+          "provider": "Open-Meteo",
+          "temperature": 13.7,
+          "temperature_unit": "°C",
+          "time": "2026-04-27T20:00"
+        },
+        "description": "Shibuya Crossing es uno de los cruces urbanos más conocidos de Tokyo, Japan, rodeado de pantallas, tiendas, rascacielos y mucho movimiento peatonal."
+      },
+      {
+        "name": "Plaça de Catalunya",
+        "formatted_address": "Barcelona, Spain",
+        "latitude": 41.387,
+        "longitude": 2.1701,
+        "coordinates": {
+          "latitude": 41.387,
+          "longitude": 2.1701
+        },
+        "place_id": null,
+        "query_used": "country_diversity_fallback:urban",
+        "rating": null,
+        "types": [
+          "country_diversity_fallback",
+          "urban"
+        ],
+        "matched_exact_signals": [],
+        "matched_visual_terms": [],
+        "photos_checked": [],
+        "scores": {
+          "query_relevance": 0.0,
+          "vision_entity_match": 0.0,
+          "best_photo_visual_similarity": 0.0,
+          "final_confidence": 0.345
+        },
+        "final_confidence": 0.345,
+        "reasons": [
+          "Added as a visually related alternative to keep five suggestions from different countries."
+        ],
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Pla%C3%A7a%20de%20Catalunya%20Barcelona%2C%20Spain",
+        "source": "country_diversity_fallback",
+        "country": "Spain",
+        "flight_search_country": "Spain",
+        "flight_search_city": "Barcelona",
+        "climate": "21.8°C",
+        "temperature": 21.8,
+        "temperature_unit": "°C",
+        "weather": {
+          "provider": "Open-Meteo",
+          "temperature": 21.8,
+          "temperature_unit": "°C",
+          "time": "2026-04-27T13:00"
+        },
+        "description": "Plaça de Catalunya se encuentra en Barcelona, Spain. Es una zona urbana destacada por su arquitectura, actividad turística y puntos de interés cercanos."
+      }
+    ],
+    "queries_generated": [
+      "ui_description_country_fix_v15",
+      "strict_country_weather_v14",
+      "country_validation_weather_v13",
+      "country_diversity_fill_v12",
+      "country_diversity_filter",
+      "fast_exact_signal_resolution",
+      "Burj Khalifa",
+      "Shanghai World Financial Center"
+    ],
+    "confidence_level": "high",
+    "exact_location_found": true
+  },
+  "candidate_locations": [
+    {
+      "name": "Burj Khalifa",
+      "formatted_address": "1 Sheikh Mohammed bin Rashid Blvd - Burj Khalifa - Downtown Dubai - Dubai - United Arab Emirates",
+      "latitude": 25.197197,
+      "longitude": 55.274376399999994,
+      "coordinates": {
+        "latitude": 25.197197,
+        "longitude": 55.274376399999994
+      },
+      "place_id": "ChIJS-JnijRDXz4R4rfO4QLlRf8",
+      "query_used": "Burj Khalifa",
+      "rating": 4.7,
+      "types": [
+        "landmark",
+        "tourist_attraction",
+        "point_of_interest",
+        "establishment"
+      ],
+      "matched_exact_signals": [
+        {
+          "text": "Burj Khalifa",
+          "score": 0.80039996,
+          "source": "web_entity",
+          "match": 1.0,
+          "matched_terms": [
+            "burj khalifa"
+          ]
+        }
+      ],
+      "matched_visual_terms": [],
+      "photos_checked": [
+        {
+          "skipped": true,
+          "reason": "Exact Vision place name resolved; photo verification skipped for speed. Set SKIP_PHOTO_CHECK_FOR_EXACT=0 to enable."
+        }
+      ],
+      "scores": {
+        "query_relevance": 1.0,
+        "vision_entity_match": 1.0,
+        "best_photo_visual_similarity": 0.0,
+        "final_confidence": 0.8400000000000001,
+        "exact_signal_score": 0.80039996,
+        "broad_query_penalty": 0.0
+      },
+      "final_confidence": 0.8400000000000001,
+      "reasons": [
+        "Resolved exact Vision web entity signal: Burj Khalifa.",
+        "This exact detected name is prioritized over broad visual fallbacks."
+      ],
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=Burj%20Khalifa%201%20Sheikh%20Mohammed%20bin%20Rashid%20Blvd%20-%20Burj%20Khalifa%20-%20Downtown%20Dubai%20-%20Dubai%20-%20United%20Arab%20Emirates",
+      "source": "vision_web_entity_resolved",
+      "speed_mode": {
+        "exact_signal_short_circuit": true,
+        "photo_check_skipped_for_exact": true,
+        "returned_without_broad_fallback": true,
+        "analysis_seconds": 3.98
+      },
+      "flight_search_city": "Dubai",
+      "country": "United Arab Emirates",
+      "flight_search_country": "United Arab Emirates",
+      "country_dedupe": {
+        "kept": true,
+        "country_key": "1 sheikh mohammed bin rashid blvd burj khalifa downtown dubai dubai united arab emirates"
+      },
+      "country_diversity_note": "Image suggestions are filtered to keep at most one candidate per country.",
+      "climate": "33.2°C",
+      "temperature": 33.2,
+      "temperature_unit": "°C",
+      "weather": {
+        "provider": "Open-Meteo",
+        "temperature": 33.2,
+        "temperature_unit": "°C",
+        "time": "2026-04-27T15:00"
+      },
+      "description": "Burj Khalifa es uno de los rascacielos más famosos de Dubai, en United Arab Emirates, conocido por su skyline moderno, sus miradores y su entorno urbano de grandes avenidas y edificios altos."
+    },
+    {
+      "name": "Shanghai World Financial Center",
+      "formatted_address": "Shang Hai Huan Qiu Jin Rong Zhong Xin, 数浦港 Pu Dong Xin Qu, Shang Hai Shi, China, 200120",
+      "latitude": 31.2343843,
+      "longitude": 121.5078265,
+      "coordinates": {
+        "latitude": 31.2343843,
+        "longitude": 121.5078265
+      },
+      "place_id": "ChIJTTWxwuVwsjURqxsZyB-YTQo",
+      "query_used": "Shanghai World Financial Center",
+      "rating": null,
+      "types": [
+        "premise",
+        "street_address"
+      ],
+      "matched_exact_signals": [
+        {
+          "text": "Shanghai World Financial Center",
+          "score": 0.7734843899999999,
+          "source": "landmark",
+          "match": 1.0,
+          "matched_terms": [
+            "shanghai world financial center"
+          ]
+        }
+      ],
+      "matched_visual_terms": [],
+      "photos_checked": [
+        {
+          "skipped": true,
+          "reason": "Exact Vision place name resolved; photo verification skipped for speed. Set SKIP_PHOTO_CHECK_FOR_EXACT=0 to enable."
+        }
+      ],
+      "scores": {
+        "query_relevance": 1.0,
+        "vision_entity_match": 0.9933710975,
+        "best_photo_visual_similarity": 0.0,
+        "final_confidence": 0.8381439073000001,
+        "exact_signal_score": 0.7734843899999999,
+        "broad_query_penalty": 0.0
+      },
+      "final_confidence": 0.8381439073000001,
+      "reasons": [
+        "Resolved exact Vision landmark signal: Shanghai World Financial Center.",
+        "This exact detected name is prioritized over broad visual fallbacks."
+      ],
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=Shanghai%20World%20Financial%20Center%20Shang%20Hai%20Huan%20Qiu%20Jin%20Rong%20Zhong%20Xin%2C%20%E6%95%B0%E6%B5%A6%E6%B8%AF%20Pu%20Dong%20Xin%20Qu%2C%20Shang%20Hai%20Shi%2C%20China%2C%20200120",
+      "source": "vision_landmark_resolved",
+      "speed_mode": {
+        "exact_signal_short_circuit": true,
+        "photo_check_skipped_for_exact": true,
+        "returned_without_broad_fallback": true,
+        "analysis_seconds": 3.98
+      },
+      "flight_search_city": "China",
+      "country": "China",
+      "flight_search_country": "China",
+      "country_dedupe": {
+        "kept": true,
+        "country_key": "200120"
+      },
+      "climate": "22.4°C",
+      "temperature": 22.4,
+      "temperature_unit": "°C",
+      "weather": {
+        "provider": "Open-Meteo",
+        "temperature": 22.4,
+        "temperature_unit": "°C",
+        "time": "2026-04-27T19:00"
+      },
+      "description": "Shanghai World Financial Center se encuentra en China. Es una posible ubicación relacionada con los elementos visuales detectados en la imagen."
+    },
+    {
+      "name": "Times Square",
+      "formatted_address": "New York, USA",
+      "latitude": 40.758,
+      "longitude": -73.9855,
+      "coordinates": {
+        "latitude": 40.758,
+        "longitude": -73.9855
+      },
+      "place_id": null,
+      "query_used": "country_diversity_fallback:urban",
+      "rating": null,
+      "types": [
+        "country_diversity_fallback",
+        "urban"
+      ],
+      "matched_exact_signals": [],
+      "matched_visual_terms": [],
+      "photos_checked": [],
+      "scores": {
+        "query_relevance": 0.0,
+        "vision_entity_match": 0.0,
+        "best_photo_visual_similarity": 0.0,
+        "final_confidence": 0.39499999999999996
+      },
+      "final_confidence": 0.39499999999999996,
+      "reasons": [
+        "Added as a visually related alternative to keep five suggestions from different countries."
+      ],
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=Times%20Square%20New%20York%2C%20USA",
+      "source": "country_diversity_fallback",
+      "country": "United States",
+      "flight_search_country": "United States",
+      "flight_search_city": "New York",
+      "climate": "5.3°C",
+      "temperature": 5.3,
+      "temperature_unit": "°C",
+      "weather": {
+        "provider": "Open-Meteo",
+        "temperature": 5.3,
+        "temperature_unit": "°C",
+        "time": "2026-04-27T07:00"
+      },
+      "description": "Times Square es una zona emblemática de New York, United States, conocida por sus pantallas luminosas, rascacielos, tiendas, teatros y ambiente urbano muy activo."
+    },
+    {
+      "name": "Shibuya Crossing",
+      "formatted_address": "Tokyo, Japan",
+      "latitude": 35.6595,
+      "longitude": 139.7005,
+      "coordinates": {
+        "latitude": 35.6595,
+        "longitude": 139.7005
+      },
+      "place_id": null,
+      "query_used": "country_diversity_fallback:urban",
+      "rating": null,
+      "types": [
+        "country_diversity_fallback",
+        "urban"
+      ],
+      "matched_exact_signals": [],
+      "matched_visual_terms": [],
+      "photos_checked": [],
+      "scores": {
+        "query_relevance": 0.0,
+        "vision_entity_match": 0.0,
+        "best_photo_visual_similarity": 0.0,
+        "final_confidence": 0.37
+      },
+      "final_confidence": 0.37,
+      "reasons": [
+        "Added as a visually related alternative to keep five suggestions from different countries."
+      ],
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=Shibuya%20Crossing%20Tokyo%2C%20Japan",
+      "source": "country_diversity_fallback",
+      "country": "Japan",
+      "flight_search_country": "Japan",
+      "flight_search_city": "Tokyo",
+      "climate": "13.7°C",
+      "temperature": 13.7,
+      "temperature_unit": "°C",
+      "weather": {
+        "provider": "Open-Meteo",
+        "temperature": 13.7,
+        "temperature_unit": "°C",
+        "time": "2026-04-27T20:00"
+      },
+      "description": "Shibuya Crossing es uno de los cruces urbanos más conocidos de Tokyo, Japan, rodeado de pantallas, tiendas, rascacielos y mucho movimiento peatonal."
+    },
+    {
+      "name": "Plaça de Catalunya",
+      "formatted_address": "Barcelona, Spain",
+      "latitude": 41.387,
+      "longitude": 2.1701,
+      "coordinates": {
+        "latitude": 41.387,
+        "longitude": 2.1701
+      },
+      "place_id": null,
+      "query_used": "country_diversity_fallback:urban",
+      "rating": null,
+      "types": [
+        "country_diversity_fallback",
+        "urban"
+      ],
+      "matched_exact_signals": [],
+      "matched_visual_terms": [],
+      "photos_checked": [],
+      "scores": {
+        "query_relevance": 0.0,
+        "vision_entity_match": 0.0,
+        "best_photo_visual_similarity": 0.0,
+        "final_confidence": 0.345
+      },
+      "final_confidence": 0.345,
+      "reasons": [
+        "Added as a visually related alternative to keep five suggestions from different countries."
+      ],
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=Pla%C3%A7a%20de%20Catalunya%20Barcelona%2C%20Spain",
+      "source": "country_diversity_fallback",
+      "country": "Spain",
+      "flight_search_country": "Spain",
+      "flight_search_city": "Barcelona",
+      "climate": "21.8°C",
+      "temperature": 21.8,
+      "temperature_unit": "°C",
+      "weather": {
+        "provider": "Open-Meteo",
+        "temperature": 21.8,
+        "temperature_unit": "°C",
+        "time": "2026-04-27T13:00"
+      },
+      "description": "Plaça de Catalunya se encuentra en Barcelona, Spain. Es una zona urbana destacada por su arquitectura, actividad turística y puntos de interés cercanos."
+    }
+  ],
+  "possible_locations": [
+    {
+      "name": "Burj Khalifa",
+      "formatted_address": "1 Sheikh Mohammed bin Rashid Blvd - Burj Khalifa - Downtown Dubai - Dubai - United Arab Emirates",
+      "latitude": 25.197197,
+      "longitude": 55.274376399999994,
+      "coordinates": {
+        "latitude": 25.197197,
+        "longitude": 55.274376399999994
+      },
+      "place_id": "ChIJS-JnijRDXz4R4rfO4QLlRf8",
+      "query_used": "Burj Khalifa",
+      "rating": 4.7,
+      "types": [
+        "landmark",
+        "tourist_attraction",
+        "point_of_interest",
+        "establishment"
+      ],
+      "matched_exact_signals": [
+        {
+          "text": "Burj Khalifa",
+          "score": 0.80039996,
+          "source": "web_entity",
+          "match": 1.0,
+          "matched_terms": [
+            "burj khalifa"
+          ]
+        }
+      ],
+      "matched_visual_terms": [],
+      "photos_checked": [
+        {
+          "skipped": true,
+          "reason": "Exact Vision place name resolved; photo verification skipped for speed. Set SKIP_PHOTO_CHECK_FOR_EXACT=0 to enable."
+        }
+      ],
+      "scores": {
+        "query_relevance": 1.0,
+        "vision_entity_match": 1.0,
+        "best_photo_visual_similarity": 0.0,
+        "final_confidence": 0.8400000000000001,
+        "exact_signal_score": 0.80039996,
+        "broad_query_penalty": 0.0
+      },
+      "final_confidence": 0.8400000000000001,
+      "reasons": [
+        "Resolved exact Vision web entity signal: Burj Khalifa.",
+        "This exact detected name is prioritized over broad visual fallbacks."
+      ],
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=Burj%20Khalifa%201%20Sheikh%20Mohammed%20bin%20Rashid%20Blvd%20-%20Burj%20Khalifa%20-%20Downtown%20Dubai%20-%20Dubai%20-%20United%20Arab%20Emirates",
+      "source": "vision_web_entity_resolved",
+      "speed_mode": {
+        "exact_signal_short_circuit": true,
+        "photo_check_skipped_for_exact": true,
+        "returned_without_broad_fallback": true,
+        "analysis_seconds": 3.98
+      },
+      "flight_search_city": "Dubai",
+      "country": "United Arab Emirates",
+      "flight_search_country": "United Arab Emirates",
+      "country_dedupe": {
+        "kept": true,
+        "country_key": "1 sheikh mohammed bin rashid blvd burj khalifa downtown dubai dubai united arab emirates"
+      },
+      "country_diversity_note": "Image suggestions are filtered to keep at most one candidate per country.",
+      "climate": "33.2°C",
+      "temperature": 33.2,
+      "temperature_unit": "°C",
+      "weather": {
+        "provider": "Open-Meteo",
+        "temperature": 33.2,
+        "temperature_unit": "°C",
+        "time": "2026-04-27T15:00"
+      },
+      "description": "Burj Khalifa es uno de los rascacielos más famosos de Dubai, en United Arab Emirates, conocido por su skyline moderno, sus miradores y su entorno urbano de grandes avenidas y edificios altos."
+    },
+    {
+      "name": "Shanghai World Financial Center",
+      "formatted_address": "Shang Hai Huan Qiu Jin Rong Zhong Xin, 数浦港 Pu Dong Xin Qu, Shang Hai Shi, China, 200120",
+      "latitude": 31.2343843,
+      "longitude": 121.5078265,
+      "coordinates": {
+        "latitude": 31.2343843,
+        "longitude": 121.5078265
+      },
+      "place_id": "ChIJTTWxwuVwsjURqxsZyB-YTQo",
+      "query_used": "Shanghai World Financial Center",
+      "rating": null,
+      "types": [
+        "premise",
+        "street_address"
+      ],
+      "matched_exact_signals": [
+        {
+          "text": "Shanghai World Financial Center",
+          "score": 0.7734843899999999,
+          "source": "landmark",
+          "match": 1.0,
+          "matched_terms": [
+            "shanghai world financial center"
+          ]
+        }
+      ],
+      "matched_visual_terms": [],
+      "photos_checked": [
+        {
+          "skipped": true,
+          "reason": "Exact Vision place name resolved; photo verification skipped for speed. Set SKIP_PHOTO_CHECK_FOR_EXACT=0 to enable."
+        }
+      ],
+      "scores": {
+        "query_relevance": 1.0,
+        "vision_entity_match": 0.9933710975,
+        "best_photo_visual_similarity": 0.0,
+        "final_confidence": 0.8381439073000001,
+        "exact_signal_score": 0.7734843899999999,
+        "broad_query_penalty": 0.0
+      },
+      "final_confidence": 0.8381439073000001,
+      "reasons": [
+        "Resolved exact Vision landmark signal: Shanghai World Financial Center.",
+        "This exact detected name is prioritized over broad visual fallbacks."
+      ],
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=Shanghai%20World%20Financial%20Center%20Shang%20Hai%20Huan%20Qiu%20Jin%20Rong%20Zhong%20Xin%2C%20%E6%95%B0%E6%B5%A6%E6%B8%AF%20Pu%20Dong%20Xin%20Qu%2C%20Shang%20Hai%20Shi%2C%20China%2C%20200120",
+      "source": "vision_landmark_resolved",
+      "speed_mode": {
+        "exact_signal_short_circuit": true,
+        "photo_check_skipped_for_exact": true,
+        "returned_without_broad_fallback": true,
+        "analysis_seconds": 3.98
+      },
+      "flight_search_city": "China",
+      "country": "China",
+      "flight_search_country": "China",
+      "country_dedupe": {
+        "kept": true,
+        "country_key": "200120"
+      },
+      "climate": "22.4°C",
+      "temperature": 22.4,
+      "temperature_unit": "°C",
+      "weather": {
+        "provider": "Open-Meteo",
+        "temperature": 22.4,
+        "temperature_unit": "°C",
+        "time": "2026-04-27T19:00"
+      },
+      "description": "Shanghai World Financial Center se encuentra en China. Es una posible ubicación relacionada con los elementos visuales detectados en la imagen."
+    },
+    {
+      "name": "Times Square",
+      "formatted_address": "New York, USA",
+      "latitude": 40.758,
+      "longitude": -73.9855,
+      "coordinates": {
+        "latitude": 40.758,
+        "longitude": -73.9855
+      },
+      "place_id": null,
+      "query_used": "country_diversity_fallback:urban",
+      "rating": null,
+      "types": [
+        "country_diversity_fallback",
+        "urban"
+      ],
+      "matched_exact_signals": [],
+      "matched_visual_terms": [],
+      "photos_checked": [],
+      "scores": {
+        "query_relevance": 0.0,
+        "vision_entity_match": 0.0,
+        "best_photo_visual_similarity": 0.0,
+        "final_confidence": 0.39499999999999996
+      },
+      "final_confidence": 0.39499999999999996,
+      "reasons": [
+        "Added as a visually related alternative to keep five suggestions from different countries."
+      ],
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=Times%20Square%20New%20York%2C%20USA",
+      "source": "country_diversity_fallback",
+      "country": "United States",
+      "flight_search_country": "United States",
+      "flight_search_city": "New York",
+      "climate": "5.3°C",
+      "temperature": 5.3,
+      "temperature_unit": "°C",
+      "weather": {
+        "provider": "Open-Meteo",
+        "temperature": 5.3,
+        "temperature_unit": "°C",
+        "time": "2026-04-27T07:00"
+      },
+      "description": "Times Square es una zona emblemática de New York, United States, conocida por sus pantallas luminosas, rascacielos, tiendas, teatros y ambiente urbano muy activo."
+    },
+    {
+      "name": "Shibuya Crossing",
+      "formatted_address": "Tokyo, Japan",
+      "latitude": 35.6595,
+      "longitude": 139.7005,
+      "coordinates": {
+        "latitude": 35.6595,
+        "longitude": 139.7005
+      },
+      "place_id": null,
+      "query_used": "country_diversity_fallback:urban",
+      "rating": null,
+      "types": [
+        "country_diversity_fallback",
+        "urban"
+      ],
+      "matched_exact_signals": [],
+      "matched_visual_terms": [],
+      "photos_checked": [],
+      "scores": {
+        "query_relevance": 0.0,
+        "vision_entity_match": 0.0,
+        "best_photo_visual_similarity": 0.0,
+        "final_confidence": 0.37
+      },
+      "final_confidence": 0.37,
+      "reasons": [
+        "Added as a visually related alternative to keep five suggestions from different countries."
+      ],
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=Shibuya%20Crossing%20Tokyo%2C%20Japan",
+      "source": "country_diversity_fallback",
+      "country": "Japan",
+      "flight_search_country": "Japan",
+      "flight_search_city": "Tokyo",
+      "climate": "13.7°C",
+      "temperature": 13.7,
+      "temperature_unit": "°C",
+      "weather": {
+        "provider": "Open-Meteo",
+        "temperature": 13.7,
+        "temperature_unit": "°C",
+        "time": "2026-04-27T20:00"
+      },
+      "description": "Shibuya Crossing es uno de los cruces urbanos más conocidos de Tokyo, Japan, rodeado de pantallas, tiendas, rascacielos y mucho movimiento peatonal."
+    },
+    {
+      "name": "Plaça de Catalunya",
+      "formatted_address": "Barcelona, Spain",
+      "latitude": 41.387,
+      "longitude": 2.1701,
+      "coordinates": {
+        "latitude": 41.387,
+        "longitude": 2.1701
+      },
+      "place_id": null,
+      "query_used": "country_diversity_fallback:urban",
+      "rating": null,
+      "types": [
+        "country_diversity_fallback",
+        "urban"
+      ],
+      "matched_exact_signals": [],
+      "matched_visual_terms": [],
+      "photos_checked": [],
+      "scores": {
+        "query_relevance": 0.0,
+        "vision_entity_match": 0.0,
+        "best_photo_visual_similarity": 0.0,
+        "final_confidence": 0.345
+      },
+      "final_confidence": 0.345,
+      "reasons": [
+        "Added as a visually related alternative to keep five suggestions from different countries."
+      ],
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=Pla%C3%A7a%20de%20Catalunya%20Barcelona%2C%20Spain",
+      "source": "country_diversity_fallback",
+      "country": "Spain",
+      "flight_search_country": "Spain",
+      "flight_search_city": "Barcelona",
+      "climate": "21.8°C",
+      "temperature": 21.8,
+      "temperature_unit": "°C",
+      "weather": {
+        "provider": "Open-Meteo",
+        "temperature": 21.8,
+        "temperature_unit": "°C",
+        "time": "2026-04-27T13:00"
+      },
+      "description": "Plaça de Catalunya se encuentra en Barcelona, Spain. Es una zona urbana destacada por su arquitectura, actividad turística y puntos de interés cercanos."
+    }
+  ],
+  "locations": [
+    {
+      "city": "Burj Khalifa",
+      "name": "Burj Khalifa",
+      "country": "United Arab Emirates",
+      "latitude": 25.197197,
+      "longitude": 55.274376399999994,
+      "confidence": 0.8400000000000001,
+      "climate": "33.2°C",
+      "temperature": 33.2,
+      "temperature_unit": "°C",
+      "weather": {
+        "provider": "Open-Meteo",
+        "temperature": 33.2,
+        "temperature_unit": "°C",
+        "time": "2026-04-27T15:00"
+      },
+      "weather_error": null,
+      "landscape": "landmark, tourist_attraction, point_of_interest",
+      "description": "Burj Khalifa es uno de los rascacielos más famosos de Dubai, en United Arab Emirates, conocido por su skyline moderno, sus miradores y su entorno urbano de grandes avenidas y edificios altos.",
+      "formatted_address": "1 Sheikh Mohammed bin Rashid Blvd - Burj Khalifa - Downtown Dubai - Dubai - United Arab Emirates",
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=Burj%20Khalifa%201%20Sheikh%20Mohammed%20bin%20Rashid%20Blvd%20-%20Burj%20Khalifa%20-%20Downtown%20Dubai%20-%20Dubai%20-%20United%20Arab%20Emirates",
+      "place_id": "ChIJS-JnijRDXz4R4rfO4QLlRf8",
+      "flight_search_city": "Dubai",
+      "flight_search_country": "United Arab Emirates"
+    },
+    {
+      "city": "Shanghai World Financial Center",
+      "name": "Shanghai World Financial Center",
+      "country": "China",
+      "latitude": 31.2343843,
+      "longitude": 121.5078265,
+      "confidence": 0.8381439073000001,
+      "climate": "22.4°C",
+      "temperature": 22.4,
+      "temperature_unit": "°C",
+      "weather": {
+        "provider": "Open-Meteo",
+        "temperature": 22.4,
+        "temperature_unit": "°C",
+        "time": "2026-04-27T19:00"
+      },
+      "weather_error": null,
+      "landscape": "premise, street_address",
+      "description": "Shanghai World Financial Center se encuentra en China. Es una posible ubicación relacionada con los elementos visuales detectados en la imagen.",
+      "formatted_address": "Shang Hai Huan Qiu Jin Rong Zhong Xin, 数浦港 Pu Dong Xin Qu, Shang Hai Shi, China, 200120",
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=Shanghai%20World%20Financial%20Center%20Shang%20Hai%20Huan%20Qiu%20Jin%20Rong%20Zhong%20Xin%2C%20%E6%95%B0%E6%B5%A6%E6%B8%AF%20Pu%20Dong%20Xin%20Qu%2C%20Shang%20Hai%20Shi%2C%20China%2C%20200120",
+      "place_id": "ChIJTTWxwuVwsjURqxsZyB-YTQo",
+      "flight_search_city": "China",
+      "flight_search_country": "China"
+    },
+    {
+      "city": "Times Square",
+      "name": "Times Square",
+      "country": "United States",
+      "latitude": 40.758,
+      "longitude": -73.9855,
+      "confidence": 0.39499999999999996,
+      "climate": "5.3°C",
+      "temperature": 5.3,
+      "temperature_unit": "°C",
+      "weather": {
+        "provider": "Open-Meteo",
+        "temperature": 5.3,
+        "temperature_unit": "°C",
+        "time": "2026-04-27T07:00"
+      },
+      "weather_error": null,
+      "landscape": "country_diversity_fallback, urban",
+      "description": "Times Square es una zona emblemática de New York, United States, conocida por sus pantallas luminosas, rascacielos, tiendas, teatros y ambiente urbano muy activo.",
+      "formatted_address": "New York, USA",
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=Times%20Square%20New%20York%2C%20USA",
+      "place_id": null,
+      "flight_search_city": "New York",
+      "flight_search_country": "United States"
+    },
+    {
+      "city": "Shibuya Crossing",
+      "name": "Shibuya Crossing",
+      "country": "Japan",
+      "latitude": 35.6595,
+      "longitude": 139.7005,
+      "confidence": 0.37,
+      "climate": "13.7°C",
+      "temperature": 13.7,
+      "temperature_unit": "°C",
+      "weather": {
+        "provider": "Open-Meteo",
+        "temperature": 13.7,
+        "temperature_unit": "°C",
+        "time": "2026-04-27T20:00"
+      },
+      "weather_error": null,
+      "landscape": "country_diversity_fallback, urban",
+      "description": "Shibuya Crossing es uno de los cruces urbanos más conocidos de Tokyo, Japan, rodeado de pantallas, tiendas, rascacielos y mucho movimiento peatonal.",
+      "formatted_address": "Tokyo, Japan",
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=Shibuya%20Crossing%20Tokyo%2C%20Japan",
+      "place_id": null,
+      "flight_search_city": "Tokyo",
+      "flight_search_country": "Japan"
+    },
+    {
+      "city": "Plaça de Catalunya",
+      "name": "Plaça de Catalunya",
+      "country": "Spain",
+      "latitude": 41.387,
+      "longitude": 2.1701,
+      "confidence": 0.345,
+      "climate": "21.8°C",
+      "temperature": 21.8,
+      "temperature_unit": "°C",
+      "weather": {
+        "provider": "Open-Meteo",
+        "temperature": 21.8,
+        "temperature_unit": "°C",
+        "time": "2026-04-27T13:00"
+      },
+      "weather_error": null,
+      "landscape": "country_diversity_fallback, urban",
+      "description": "Plaça de Catalunya se encuentra en Barcelona, Spain. Es una zona urbana destacada por su arquitectura, actividad turística y puntos de interés cercanos.",
+      "formatted_address": "Barcelona, Spain",
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=Pla%C3%A7a%20de%20Catalunya%20Barcelona%2C%20Spain",
+      "place_id": null,
+      "flight_search_city": "Barcelona",
+      "flight_search_country": "Spain"
+    }
+  ],
+  "note": "final_confidence is a heuristic score. Candidates are generated with Google Vision features, resolved with Google Places, and visually checked against Places photos using Vision terms."
+}

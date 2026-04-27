@@ -55,9 +55,20 @@ El proyecto está dividido en tres fases lógicas integradas en una experiencia 
 
 ---
 
-## 1. Requisitos previos
+## 1. Requisitos previos y Modo Demo
 
-Necesitarás configurar las siguientes API Keys en tu archivo `.env`:
+Puedes probar la aplicación de dos formas:
+
+### A. Modo Demo (Sin gastar tokens)
+Ideal para ver cómo funciona la web sin necesidad de configurar todas las APIs. En este modo, se utilizan resultados pre-cargados (mockados) para el análisis de imagen y la búsqueda de vuelos, pero la **validación por voz sigue funcionando**.
+
+Para activar el Modo Demo, añade esta variable en tu `.env` o ejecútalo así:
+```bash
+DEMO_MODE=1 python main.py
+```
+
+### B. Modo Completo (Tus propios tokens)
+Para usar la potencia real de la IA, configura las siguientes API Keys en tu archivo `.env`:
 
 | Servicio | Uso |
 |---|---|
@@ -88,10 +99,14 @@ Necesitarás configurar las siguientes API Keys en tu archivo `.env`:
 3. **Configura las variables de entorno:**
    Crea un archivo `.env` en la raíz del proyecto y añade tus credenciales:
    ```env
+   # API Keys (Opcional si usas DEMO_MODE=1)
    GEMINI_API_KEY=tu_clave_aqui
    SKYSCANNER_API_KEY=tu_clave_aqui
    GOOGLE_API_KEY=tu_clave_aqui
    ELEVENLABS_API_KEY=tu_clave_aqui
+
+   # Configuración de la App
+   DEMO_MODE=0           # Cambia a 1 para probar sin gastar tokens
    LOCATION_FAST_MODE=1
    ```
 
@@ -99,7 +114,9 @@ Necesitarás configurar las siguientes API Keys en tu archivo `.env`:
 
 ## 3. Ejecución
 
-Para iniciar el servidor de desarrollo, ejecuta:
+Para iniciar el servidor, simplemente ejecuta:
 
 ```bash
-uvicorn app.main:app --reload
+python main.py
+```
+```
