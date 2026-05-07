@@ -7,7 +7,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+def get_client():
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        return None
+    return genai.Client(api_key=api_key)
 
 
 def analyze_media_for_locations(file_path: str, mime_type: str = "image/jpeg") -> dict:
@@ -16,6 +20,9 @@ def analyze_media_for_locations(file_path: str, mime_type: str = "image/jpeg") -
     possible travel destinations shown in the media.
     Returns a dict with a 'locations' list.
     """
+    client = get_client()
+    if not client:
+        return {"locations": [], "error": "GEMINI_API_KEY not configured"}
 
     prompt = """Analiza esta imagen y determina qué lugar(es) del mundo podrían ser.
 
@@ -51,7 +58,7 @@ Responde SOLO con el JSON, sin ningún texto adicional ni bloques de código."""
 
         # Generate content
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-1.5-flash",
             contents=[prompt, uploaded_file],
         )
         text = response.text.strip()
@@ -91,6 +98,9 @@ def refine_locations_with_voice(current_locations: list, transcript: str) -> dic
     then asks Gemini to correct/refine the list based on what the user said.
     Returns a dict with a 'locations' list.
     """
+    client = get_client()
+    if not client:
+        return {"locations": current_locations, "error": "GEMINI_API_KEY not configured"}
 
     locations_json = json.dumps(current_locations, ensure_ascii=False, indent=2)
 
@@ -130,7 +140,7 @@ FORMATO DE RESPUESTA (JSON estricto, sin markdown):
 Responde SOLO con el JSON, sin ningún texto adicional ni bloques de código."""
 
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-1.5-flash",
         contents=prompt,
     )
     text = response.text.strip()
