@@ -20,10 +20,10 @@
       "confidence": 0.84,
       "price": "342 €",
       "date": "2026-05-15",
-      "observed": "Hoy",
+      "observed": "Today",
       "duration": "430 min",
-      "stops": "Directo",
-      "hotel_price": "145€/noche"
+      "stops": "Direct",
+      "hotel_price": "145€/night"
     },
     "Shanghai World Financial Center": {
       "destination_name": "Shanghai World Financial Center",
@@ -40,10 +40,10 @@
       "confidence": 0.83,
       "price": "680 €",
       "date": "2026-06-10",
-      "observed": "Hoy",
+      "observed": "Today",
       "duration": "720 min",
-      "stops": "1 o más escalas",
-      "hotel_price": "90€/noche"
+      "stops": "1 or more stops",
+      "hotel_price": "90€/night"
     },
     "Times Square": {
       "destination_name": "Times Square",
@@ -60,10 +60,10 @@
       "confidence": 0.39,
       "price": "450 €",
       "date": "2026-05-20",
-      "observed": "Ayer",
+      "observed": "Yesterday",
       "duration": "510 min",
-      "stops": "Directo",
-      "hotel_price": "180€/noche"
+      "stops": "Direct",
+      "hotel_price": "180€/night"
     },
     "Shibuya Crossing": {
       "destination_name": "Shibuya Crossing",
@@ -80,10 +80,10 @@
       "confidence": 0.37,
       "price": "890 €",
       "date": "2026-07-01",
-      "observed": "Hoy",
+      "observed": "Today",
       "duration": "840 min",
-      "stops": "1 o más escalas",
-      "hotel_price": "85€/noche"
+      "stops": "1 or more stops",
+      "hotel_price": "85€/night"
     },
     "Plaça de Catalunya": {
       "destination_name": "Plaça de Catalunya",
@@ -98,15 +98,15 @@
       "airport_distance_km": 12.0,
       "maps_url": "https://www.google.com/maps/search/?api=1&query=Pla%C3%A7a%20de%20Catalunya",
       "confidence": 0.34,
-      "price": "No hace falta un vuelo",
+      "price": "No flight needed",
       "date": "N/A",
       "observed": "N/A",
       "duration": null,
       "stops": "N/A",
-      "hotel_price": "70€/noche",
+      "hotel_price": "70€/night",
       "status": "no_flight_needed",
-      "message": "No hace falta un vuelo",
-      "reason": "El destino coincide con el origen."
+      "message": "No flight needed",
+      "reason": "Destination matches origin."
     }
   },
   "flight_destinations_used": ["Dubai", "Shanghai", "New York", "Tokyo"],

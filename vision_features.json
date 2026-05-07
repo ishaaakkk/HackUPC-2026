@@ -1,0 +1,338 @@
+{
+  "source_input": "shanghai.png",
+  "source_type": "file_upload",
+  "media_type": "image",
+  "analyzed_images": [
+    {
+      "image_path": "/tmp/tmpio8rncpp.png",
+      "labels": [
+        {
+          "description": "Skyscraper",
+          "score": 0.9926396
+        },
+        {
+          "description": "Sky",
+          "score": 0.990997
+        },
+        {
+          "description": "Building",
+          "score": 0.984533
+        },
+        {
+          "description": "City",
+          "score": 0.9844591
+        },
+        {
+          "description": "Urban area",
+          "score": 0.98255944
+        },
+        {
+          "description": "Daytime",
+          "score": 0.98177814
+        },
+        {
+          "description": "Metropolitan area",
+          "score": 0.97715175
+        },
+        {
+          "description": "High-rise building",
+          "score": 0.97552055
+        },
+        {
+          "description": "Tower",
+          "score": 0.9612103
+        },
+        {
+          "description": "Cityscape",
+          "score": 0.9602655
+        },
+        {
+          "description": "Metropolis",
+          "score": 0.9481023
+        },
+        {
+          "description": "Commercial building",
+          "score": 0.9454032
+        },
+        {
+          "description": "Skyline",
+          "score": 0.93639404
+        },
+        {
+          "description": "Architecture",
+          "score": 0.9280621
+        },
+        {
+          "description": "Landmark",
+          "score": 0.92586243
+        },
+        {
+          "description": "Condominium",
+          "score": 0.91469705
+        },
+        {
+          "description": "Human settlement",
+          "score": 0.88807964
+        },
+        {
+          "description": "Mixed-use",
+          "score": 0.830538
+        },
+        {
+          "description": "Headquarters",
+          "score": 0.82672644
+        },
+        {
+          "description": "Apartment",
+          "score": 0.8252307
+        }
+      ],
+      "landmarks": [
+        {
+          "description": "Shanghai Tower",
+          "lat": 31.233518000000004,
+          "lng": 121.505618,
+          "score": 0.7343227
+        },
+        {
+          "description": "Oriental Pearl Tv Tower",
+          "lat": 31.239688899999997,
+          "lng": 121.49975529999999,
+          "score": 0.4910404
+        },
+        {
+          "description": "Shanghai World Financial Center",
+          "lat": 31.2345644,
+          "lng": 121.5074394,
+          "score": 0.42348439
+        }
+      ],
+      "logos": [],
+      "safe_search": {
+        "adult": "VERY_UNLIKELY",
+        "spoof": "VERY_UNLIKELY",
+        "medical": "VERY_UNLIKELY",
+        "violence": "VERY_UNLIKELY",
+        "racy": "VERY_UNLIKELY"
+      },
+      "text": "",
+      "web_entities": [
+        {
+          "description": "Shanghai Tower",
+          "score": 2.1405876
+        },
+        {
+          "description": "Jin Mao Tower",
+          "score": 1.1773561
+        },
+        {
+          "description": "Shanghai World Financial Center",
+          "score": 1.1327744
+        },
+        {
+          "description": "广州塔",
+          "score": 0.9646725
+        },
+        {
+          "description": "Burj Khalifa",
+          "score": 0.80039996
+        },
+        {
+          "description": "Building",
+          "score": 0.7052
+        },
+        {
+          "description": "Tower",
+          "score": 0.69514763
+        },
+        {
+          "description": "Skyscraper",
+          "score": 0.6942763
+        },
+        {
+          "description": "Architecture",
+          "score": 0.5494
+        },
+        {
+          "description": "History of the world's tallest buildings",
+          "score": 0.4484
+        },
+        {
+          "description": "Construction",
+          "score": 0.4183
+        },
+        {
+          "description": "High-rise building",
+          "score": 0.3799
+        },
+        {
+          "description": "Shanghai",
+          "score": 6.8348556e-05
+        },
+        {
+          "description": "China",
+          "score": 1.0830339e-07
+        }
+      ]
+    }
+  ],
+  "visual_summary": {
+    "labels": [
+      {
+        "description": "Skyscraper",
+        "score": 0.9926396
+      },
+      {
+        "description": "Sky",
+        "score": 0.990997
+      },
+      {
+        "description": "Building",
+        "score": 0.984533
+      },
+      {
+        "description": "City",
+        "score": 0.9844591
+      },
+      {
+        "description": "Urban area",
+        "score": 0.98255944
+      },
+      {
+        "description": "Daytime",
+        "score": 0.98177814
+      },
+      {
+        "description": "Metropolitan area",
+        "score": 0.97715175
+      },
+      {
+        "description": "High-rise building",
+        "score": 0.97552055
+      },
+      {
+        "description": "Tower",
+        "score": 0.9612103
+      },
+      {
+        "description": "Cityscape",
+        "score": 0.9602655
+      },
+      {
+        "description": "Metropolis",
+        "score": 0.9481023
+      },
+      {
+        "description": "Commercial building",
+        "score": 0.9454032
+      },
+      {
+        "description": "Skyline",
+        "score": 0.93639404
+      },
+      {
+        "description": "Architecture",
+        "score": 0.9280621
+      },
+      {
+        "description": "Landmark",
+        "score": 0.92586243
+      }
+    ],
+    "landmarks": [
+      {
+        "description": "Shanghai Tower",
+        "lat": 31.233518000000004,
+        "lng": 121.505618,
+        "score": 0.7343227
+      },
+      {
+        "description": "Oriental Pearl Tv Tower",
+        "lat": 31.239688899999997,
+        "lng": 121.49975529999999,
+        "score": 0.4910404
+      },
+      {
+        "description": "Shanghai World Financial Center",
+        "lat": 31.2345644,
+        "lng": 121.5074394,
+        "score": 0.42348439
+      }
+    ],
+    "logos": [],
+    "text": "",
+    "web_entities": [
+      {
+        "description": "Shanghai Tower",
+        "score": 2.1405876
+      },
+      {
+        "description": "Jin Mao Tower",
+        "score": 1.1773561
+      },
+      {
+        "description": "Shanghai World Financial Center",
+        "score": 1.1327744
+      },
+      {
+        "description": "广州塔",
+        "score": 0.9646725
+      },
+      {
+        "description": "Burj Khalifa",
+        "score": 0.80039996
+      },
+      {
+        "description": "Building",
+        "score": 0.7052
+      },
+      {
+        "description": "Tower",
+        "score": 0.69514763
+      },
+      {
+        "description": "Skyscraper",
+        "score": 0.6942763
+      },
+      {
+        "description": "Architecture",
+        "score": 0.5494
+      },
+      {
+        "description": "History of the world's tallest buildings",
+        "score": 0.4484
+      },
+      {
+        "description": "Construction",
+        "score": 0.4183
+      },
+      {
+        "description": "High-rise building",
+        "score": 0.3799
+      },
+      {
+        "description": "Shanghai",
+        "score": 6.8348556e-05
+      },
+      {
+        "description": "China",
+        "score": 1.0830339e-07
+      }
+    ]
+  },
+  "visual_terms_used_for_matching": [
+    "skyscraper",
+    "tower",
+    "cityscape",
+    "metropolis",
+    "skyline",
+    "landmark",
+    "shanghai tower",
+    "jin mao tower",
+    "shanghai world financial center",
+    "burj khalifa",
+    "history of the world's tallest buildings",
+    "construction",
+    "oriental pearl tv tower"
+  ]
+}

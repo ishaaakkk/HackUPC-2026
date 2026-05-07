@@ -151,7 +151,7 @@ class SkyscannerOptimizer:
             quotes = data.get("content", {}).get("results", {}).get("quotes", {})
             
             if not quotes:
-                return "Sin datos para este mes"
+                return "No data for this month"
             
             best_quote = None
             min_p = float('inf')
@@ -172,7 +172,7 @@ class SkyscannerOptimizer:
                     "duration": "N/A",
                     "stops": 0 if best_quote.get("isDirect") else "1+"
                 }
-            return "Sin precios"
+            return "No prices"
         return f"Error API ({res.status_code}: {res.text[:50]})"
     
     def _get_best_price(self, origin_id, dest_id, date):
@@ -200,9 +200,9 @@ class SkyscannerOptimizer:
                 year = now.year + (now.month + i - 1) // 12
                 p = self.search_indicative_cheapest(origin_id, dest_id, year, month)
                 if isinstance(p, dict): results.append(p)
-            return min(results, key=lambda x: x["price"]) if results else "Sin vuelos en los próximos meses"
+            return min(results, key=lambda x: x["price"]) if results else "No flights in the upcoming months"
 
-        return "Formato de fecha no reconocido (usa YYYY, YYYY-MM o YYYY-MM-DD)"
+        return "Date format not recognized (use YYYY, YYYY-MM or YYYY-MM-DD)"
 
     def _to_float(self, value, default=0.0):
         try:
@@ -332,9 +332,9 @@ class SkyscannerOptimizer:
             nearby = self.get_nearest_airports_fallback(origin)
             if nearby:
                 origin_id = nearby[0]["entityId"]
-                print(f"✅ Usando aeropuerto cercano: {nearby[0]['name']}")
+                print(f"✅ Using nearby airport: {nearby[0]['name']}")
             else:
-                raise ValueError(f"No se pudo localizar el origen '{origin}' ni aeropuertos cercanos.")
+                raise ValueError(f"Could not locate origin '{origin}' or nearby airports.")
 
         final_data = {
             "origin": {
@@ -425,10 +425,10 @@ class SkyscannerOptimizer:
                 price_int = int(float(flight_info["price"]))
                 price_val = f"{price_int} €"
                 if via_airport:
-                    price_val += f" (vía {via_airport})"
+                    price_val += f" (via {via_airport})"
 
                 is_direct = flight_info.get("is_direct", False)
-                stops_label = "Directo" if is_direct else "1 o más escalas"
+                stops_label = "Direct" if is_direct else "1 or more stops"
                 base_result.update({
                     "price": price_val,
                     "date": date_str,
@@ -438,7 +438,7 @@ class SkyscannerOptimizer:
                 })
             else:
                 base_result.update({
-                    "price": str(flight_info) if flight_info else "Sin resultados",
+                    "price": str(flight_info) if flight_info else "No results",
                     "date": "N/A",
                     "observed": "N/A",
                     "duration": None,

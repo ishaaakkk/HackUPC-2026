@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>View it, Visit it — Descubre tu próximo destino</title>
-  <meta name="description" content="Sube una imagen de un destino y descubre vuelos baratos con IA multimodal y validación por voz.">
+  <title>View it, Visit it — Discover your next destination</title>
+  <meta name="description" content="Upload an image of a destination and discover cheap flights with multi-modal AI and voice validation.">
 
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -23,15 +23,15 @@
       </a>
       <div class="navbar-steps">
         <div class="step-indicator active" id="step1">
-          <span>📷</span> Imagen
+          <span>📷</span> Media
         </div>
         <div class="step-connector"></div>
         <div class="step-indicator" id="step2">
-          <span>🎙️</span> Voz
+          <span>🎙️</span> Voice
         </div>
         <div class="step-connector"></div>
         <div class="step-indicator" id="step3">
-          <span>✈️</span> Vuelos
+          <span>✈️</span> Flights
         </div>
       </div>
     </nav>
@@ -39,31 +39,31 @@
     <!-- ===== PHASE 1: Image Upload ===== -->
     <section class="phase active" id="phase1">
       <div class="upload-container">
-        <h1 class="upload-title">¿A dónde quieres viajar?</h1>
-        <p class="upload-subtitle">Sube una imagen de tu destino soñado y nuestra IA lo identificará</p>
+        <h1 class="upload-title">Where do you want to travel?</h1>
+        <p class="upload-subtitle">Upload an image of your dream destination and our AI will identify it</p>
 
         <div class="dropzone" id="dropzone">
           <img class="image-preview" id="imagePreview" alt="Preview" style="display: none;">
           <video class="image-preview" id="videoPreview" controls style="display: none;"></video>
           <span class="dropzone-icon" id="dropzoneIcon">📷 / 🎥</span>
-          <p class="dropzone-text" id="dropzoneText">Arrastra una imagen o video aquí o haz clic para seleccionar</p>
-          <p class="dropzone-hint" id="dropzoneHint">JPG, PNG, WebP, MP4, MOV — máx. 50MB</p>
+          <p class="dropzone-text" id="dropzoneText">Drag a photo or video here or click to select</p>
+          <p class="dropzone-hint" id="dropzoneHint">JPG, PNG, WebP, MP4, MOV — max 50MB</p>
           <input type="file" id="fileInput" accept="image/*,video/*">
         </div>
         
         <div style="margin-top: 15px; width: 100%;">
-          <input type="url" id="urlInput" placeholder="🔗 O pega la URL de una imagen/video aquí" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); color: white; border-radius: 8px; font-family: inherit;">
+          <input type="url" id="urlInput" placeholder="🔗 Or paste an image/video URL here" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); color: white; border-radius: 8px; font-family: inherit;">
         </div>
 
 
         <div class="origin-badge" id="originBadge" style="display: none;">
           <span class="origin-dot"></span>
-          <span>Tu origen: </span>
-          <strong id="originCity">Detectando...</strong>
+          <span>Your origin: </span>
+          <strong id="originCity">Detecting...</strong>
         </div>
 
         <button class="btn-analyze" id="btnAnalyze">
-          <span>✨</span> Analizar imagen
+          <span>✨</span> Analyze media
         </button>
       </div>
     </section>
@@ -71,25 +71,25 @@
     <!-- ===== PHASE 2: Voice Validation ===== -->
     <section class="phase" id="phase2">
       <div class="voice-container">
-        <h2 class="voice-title">📍 Destinos detectados</h2>
-        <p class="voice-subtitle">Confirma los resultados o corrígelos con tu voz</p>
+        <h2 class="voice-title">📍 Detected Destinations</h2>
+        <p class="voice-subtitle">Confirm the results or refine them with your voice</p>
 
         <div class="locations-grid" id="locationsGrid">
           <!-- Cards rendered by JS -->
         </div>
 
         <div class="mic-section">
-          <button class="mic-btn" id="micBtn" title="Grabar audio">🎙️</button>
-          <p class="mic-status" id="micStatus">Pulsa para grabar</p>
+          <button class="mic-btn" id="micBtn" title="Record audio">🎙️</button>
+          <p class="mic-status" id="micStatus">Click to record</p>
         </div>
 
         <div class="transcript-box" id="transcriptBox">
-          <span class="transcript-label">Transcripción</span>
+          <span class="transcript-label">Transcript</span>
           <span id="transcriptText"></span>
         </div>
 
         <button class="btn-confirm" id="btnConfirm">
-          Confirmar destinos y buscar vuelos →
+          Confirm destinations and find flights →
         </button>
       </div>
     </section>
@@ -105,55 +105,61 @@
         <button class="dest-panel-close" id="destPanelClose">✕</button>
         <img class="dest-panel-image" id="destPanelImage" alt="Destination" src="">
         <div class="dest-panel-body">
-          <h2 class="dest-panel-city" id="destPanelCity">Ciudad</h2>
-          <p class="dest-panel-country" id="destPanelCountry">País</p>
+          <h2 class="dest-panel-city" id="destPanelCity">City</h2>
+          <p class="dest-panel-country" id="destPanelCountry">Country</p>
           <div class="dest-panel-price" id="destPanelPrice">—</div>
 
           <div class="dest-info-grid">
             <div class="dest-info-item">
-              <div class="dest-info-label">📅 Fecha</div>
+              <div class="dest-info-label">📅 Date</div>
               <div class="dest-info-value" id="destPanelDate">N/A</div>
             </div>
             <div class="dest-info-item">
-              <div class="dest-info-label">🔄 Escalas</div>
+              <div class="dest-info-label">🔄 Stops</div>
               <div class="dest-info-value" id="destPanelStops">N/A</div>
             </div>
             <div class="dest-info-item">
-              <div class="dest-info-label">🌡️ Clima</div>
+              <div class="dest-info-label">🌡️ Climate</div>
               <div class="dest-info-value" id="destPanelClimate">N/A</div>
             </div>
             <div class="dest-info-item">
-              <div class="dest-info-label">🏔️ Paisaje</div>
+              <div class="dest-info-label">🏔️ Landscape</div>
               <div class="dest-info-value" id="destPanelLandscape">N/A</div>
             </div>
             <div class="dest-info-item">
-              <div class="dest-info-label">🏨 Hotel desde</div>
+              <div class="dest-info-label">🏨 Hotel from</div>
               <div class="dest-info-value" id="destPanelHotel">N/A</div>
             </div>
           </div>
 
           <div class="dest-description" id="destPanelDescription">
-            Información del destino
+            Destination info
           </div>
         </div>
       </div>
 
       <!-- Restart button -->
       <button class="btn-restart" id="btnRestart">
-        ↺ Reiniciar búsqueda
+        ↺ Restart search
       </button>
     </section>
 
     <!-- ===== Loading Overlay ===== -->
     <div class="loading-overlay" id="loadingOverlay">
       <div class="loading-spinner"></div>
-      <p class="loading-text" id="loadingText">Procesando...</p>
+      <p class="loading-text" id="loadingText">Processing...</p>
     </div>
 
   </div>
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- App JS -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
+
 
   <!-- App JS -->
   <script src="/static/js/app.js"></script>

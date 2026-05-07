@@ -1,122 +1,123 @@
 # View it, Visit it — Multi-Modal Travel App (HackUPC 2026)
 
-**View it, Visit it** es una aplicación web de viajes de vanguardia que utiliza **Inteligencia Artificial multimodal** y **validación por voz** para ayudarte a descubrir tu próximo destino.
+**View it, Visit it** is a cutting-edge travel web application that utilizes **multi-modal Artificial Intelligence** and **voice validation** to help you discover your next destination.
 
-El proyecto está dividido en tres fases lógicas integradas en una experiencia de **Single Page Application (SPA)** premium.
+The project is divided into three logical phases integrated into a premium **Single Page Application (SPA)** experience.
 
 ---
 
-## 🌟 Características principales
+## 🌟 Key Features
 
-### Fase 1: Análisis de Imagen y Origen
+### Phase 1: Image & Origin Analysis
 **Vision & Metadata**
 
-- Subida de imagen para identificar destinos probables mediante **Gemini 2.5 Flash** y **Google Vision API**.
-- Detección automática de la ciudad de origen del usuario mediante geolocalización por IP.
-- Resolución de puntos de interés (POI) a coordenadas reales mediante **Google Places API**.
+- Image/Video upload to identify likely destinations using **Gemini 2.5 Flash** and **Google Vision API**.
+- Automatic detection of the user's origin city via IP geolocation.
+- Resolution of points of interest (POI) to real coordinates using **Google Places API**.
 
-### Fase 2: Validación y Corrección
+### Phase 2: Validation & Correction
 **Voice UI & Human-in-the-Loop**
 
-- Interfaz moderna para revisar las sugerencias generadas por la IA.
-- Validación por voz para corregir o confirmar destinos hablando directamente al navegador.
-- Transcripción mediante **ElevenLabs Scribe** y refinamiento semántico con Gemini.
+- Modern interface to review AI-generated suggestions.
+- Voice validation to correct or confirm destinations by speaking directly to the browser.
+- Transcription via **Web Speech API** (Browser) with fallback to **Gemini 1.5 Flash**.
 
-### Fase 3: Dashboard de Vuelos y Mapa Interactivo
+### Phase 3: Flight Dashboard & Interactive Map
 
-- Búsqueda de vuelos en tiempo real mediante la **API de Skyscanner**.
-- Mapa interactivo basado en **Leaflet** con marcadores de precio y arcos de ruta.
-- Panel lateral con imágenes dinámicas de Wikipedia y detalles del destino:
-  - Clima en tiempo real (vía **Open-Meteo**)
-  - Paisajes
-  - Hoteles
-  - Información del lugar
+- Real-time flight search via the **Skyscanner API**.
+- Interactive map based on **Leaflet** with price markers and route arcs.
+- Side panel with dynamic images from Wikipedia and destination details:
+  - Real-time weather (via **Open-Meteo**)
+  - Landscape info
+  - Hotels
+  - Destination overview
 
 ---
 
-## 🛠️ Stack Tecnológico
+## 🛠️ Technology Stack
 
 - **Backend:** FastAPI (Python 3.10+)
 - **Frontend:** HTML5, CSS3 (Modern UI), JavaScript (Vanilla ES6+)
 - **AI/ML:** 
-  - Google Gemini 2.5 Flash (Análisis Multimodal)
-  - Google Cloud Vision (Detección de Landmarks y OCR)
-  - ElevenLabs (Speech-to-Text)
-- **Mapas:** Leaflet.js
-- **APIs de Datos:**
-  - Skyscanner (Vuelos)
-  - Google Places (Geolocalización y Fotos)
-  - Open-Meteo (Clima)
-  - Wikipedia API (Imágenes y contenido)
+  - Google Gemini 2.5 Flash (Multi-modal analysis)
+  - Google Cloud Vision (Landmark detection and OCR)
+  - Web Speech API & Google Gemini (Speech-to-Text)
+- **Maps:** Leaflet.js
+- **Data APIs:**
+  - Skyscanner (Flights)
+  - Google Places (Geolocation and Photos)
+  - Open-Meteo (Weather)
+  - Wikipedia API (Images and content)
 
 ---
 
-## 🚀 Guía de inicio rápido
+## 🚀 Quick Start Guide
 
 ---
 
-## 1. Requisitos previos y Modo Demo
+## 1. Prerequisites and Demo Mode
 
-Puedes probar la aplicación de dos formas:
+You can try the application in two ways:
 
-### A. Modo Demo (Sin gastar tokens)
-Ideal para ver cómo funciona la web sin necesidad de configurar todas las APIs. En este modo, se utilizan resultados pre-cargados (mockados) para el análisis de imagen y la búsqueda de vuelos, pero la **validación por voz sigue funcionando**.
+### A. Demo Mode (Without spending tokens)
+Ideal for seeing how the site works without configuring all APIs. In this mode, pre-loaded (mock) results are used for image analysis and flight search, but **voice validation remains functional**.
 
-Para activar el Modo Demo, añade esta variable en tu `.env` o ejecútalo así:
+To activate Demo Mode, add this variable to your `.env` or run it like this:
 ```bash
 DEMO_MODE=1 python main.py
 ```
 
-### B. Modo Completo (Tus propios tokens)
-Para usar la potencia real de la IA, configura las siguientes API Keys en tu archivo `.env`:
+### B. Full Mode (Your own tokens)
+To use the true power of AI, configure the following API Keys in your `.env` file:
 
-| Servicio | Uso |
+| Service | Usage |
 |---|---|
-| Gemini API Key | Análisis multimodal de imágenes y refinamiento de texto |
-| ElevenLabs API Key | Transcripción de voz a texto con Scribe v1 |
-| Skyscanner API Key | Obtención de ofertas de vuelos reales |
-| Google Maps/Vision API Key | Detección de lugares, búsqueda de sitios y mapas |
+| Gemini API Key | Multi-modal image analysis, text refinement, and transcription fallback |
+| (Optional) | Voice-to-text transcription uses the Public Web Speech API (Browser) |
+| Skyscanner API Key | Real-time flight deals |
+| Google Maps/Vision API Key | Landmark detection, place search, and maps |
 
 ---
 
-## 2. Instalación
+## 2. Installation
 
-1. **Clona el repositorio:**
+1. **Clone the repository:**
    ```bash
-   git clone https://github.com/tu-usuario/HackUPC2026.git
-   cd HackUPC2026
+   git clone https://github.com/ishaaakkk/HackUPC-2026.git
+   cd HackUPC-2026
    ```
 
-2. **Crea un entorno virtual e instala las dependencias:**
+2. **Create a virtual environment and install dependencies:**
    ```bash
    python -m venv venv
-   source venv/bin/activate  # En Windows: venv\Scripts\activate
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
    pip install -r requirements.txt
    ```
 
-   *Nota: Si vas a procesar video, asegúrate de tener `opencv-python-headless` instalado.*
+   *Note: If you plan to process video, ensure `opencv-python-headless` is installed.*
 
-3. **Configura las variables de entorno:**
-   Crea un archivo `.env` en la raíz del proyecto y añade tus credenciales:
+3. **Configure environment variables:**
+   Create a `.env` file in the project root and add your credentials:
    ```env
-   # API Keys (Opcional si usas DEMO_MODE=1)
-   GEMINI_API_KEY=tu_clave_aqui
-   SKYSCANNER_API_KEY=tu_clave_aqui
-   GOOGLE_API_KEY=tu_clave_aqui
-   ELEVENLABS_API_KEY=tu_clave_aqui
+   # API Keys (Optional if using DEMO_MODE=1)
+   GEMINI_API_KEY=your_key_here
+   SKYSCANNER_API_KEY=your_key_here
+   GOOGLE_API_KEY=your_key_here
+   ELEVENLABS_API_KEY=your_key_here
 
-   # Configuración de la App
-   DEMO_MODE=0           # Cambia a 1 para probar sin gastar tokens
+   # App Configuration
+   DEMO_MODE=0           # Change to 1 to test without spending tokens
    LOCATION_FAST_MODE=1
    ```
 
 ---
 
-## 3. Ejecución
+## 3. Running the App
 
-Para iniciar el servidor, simplemente ejecuta:
+To start the server, simply run:
 
 ```bash
 python main.py
 ```
-```
+
+The application will be running locally at: **http://127.0.0.1:8000** (or the address shown in your terminal).

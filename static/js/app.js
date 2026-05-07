@@ -254,7 +254,7 @@
     if (!state.imageFile && !state.imageUrl) return;
 
     btnAnalyze.disabled = true;
-    showLoading("Analizando contenido con IA...");
+    showLoading("Analyzing content with AI...");
 
     try {
       const formData = new FormData();
@@ -272,7 +272,7 @@
       state.locations = data.locations || [];
 
       if (state.locations.length === 0) {
-        alert("No se pudieron detectar ubicaciones en la imagen. Intenta con otra imagen.");
+        alert("No locations could be detected in the media. Try another image or video.");
         btnAnalyze.disabled = false;
         hideLoading();
         return;
@@ -283,7 +283,7 @@
       renderLocationCards();
     } catch (e) {
       console.error("Analysis error:", e);
-      alert("Error al analizar la imagen: " + e.message);
+      alert("Error analyzing media: " + e.message);
       hideLoading();
       btnAnalyze.disabled = false;
     }
@@ -316,6 +316,29 @@
   }
 
   // Microphone recording
+  let recognition = null;
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'es-ES'; // Default to Spanish as per user request context
+    recognition.interimResults = false;
+    recognition.continuous = false;
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      console.log("Web Speech Transcript:", transcript);
+      processTranscript(transcript);
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      // Fallback to the old recording method if recognition fails or is denied
+      if (event.error === 'not-allowed') {
+        alert("Microphone access denied. Using fallback recording method.");
+      }
+    };
+  }
+
   micBtn.addEventListener("click", async () => {
     if (state.isRecording) {
       stopRecording();
@@ -325,6 +348,21 @@
   });
 
   async function startRecording() {
+    if (recognition) {
+      try {
+        recognition.start();
+        state.isRecording = true;
+        micBtn.classList.add("recording");
+        micBtn.innerHTML = "⏹";
+        micStatus.textContent = "Listening... Speak now";
+        micStatus.className = "mic-status recording";
+        return;
+      } catch (e) {
+        console.warn("Recognition start failed, falling back to MediaRecorder", e);
+      }
+    }
+
+    // Fallback: MediaRecorder (Original logic)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       state.audioChunks = [];
@@ -347,31 +385,62 @@
       state.isRecording = true;
       micBtn.classList.add("recording");
       micBtn.innerHTML = "⏹";
-      micStatus.textContent = "Grabando... Pulsa para detener";
+      micStatus.textContent = "Recording... Click to stop";
       micStatus.className = "mic-status recording";
     } catch (e) {
       console.error("Mic error:", e);
-      alert(
-        "No se pudo acceder al micrófono. Asegúrate de dar permiso."
-      );
+      alert("Could not access the microphone.");
     }
   }
 
   function stopRecording() {
+    if (recognition && state.isRecording) {
+      recognition.stop();
+      state.isRecording = false;
+      micBtn.classList.remove("recording");
+      micBtn.innerHTML = "🎙️";
+      micStatus.textContent = "Processing...";
+      micStatus.className = "mic-status processing";
+      return;
+    }
+
     if (state.mediaRecorder && state.mediaRecorder.state === "recording") {
       state.mediaRecorder.stop();
       state.isRecording = false;
       micBtn.classList.remove("recording");
       micBtn.innerHTML = "🎙️";
-      micStatus.textContent = "Procesando audio...";
+      micStatus.textContent = "Processing audio...";
       micStatus.className = "mic-status processing";
+    }
+  }
+
+  async function processTranscript(transcript) {
+    showLoading("Refining destinations with your voice...");
+    try {
+      const formData = new FormData();
+      formData.append("transcript", transcript);
+      formData.append("locations", JSON.stringify(state.locations));
+
+      const res = await fetch("/api/voice-validate", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Error processing transcript");
+
+      const data = await res.json();
+      updateVoiceResults(data);
+    } catch (e) {
+      console.error(e);
+      micStatus.textContent = "Error processing voice";
+    } finally {
+      hideLoading();
     }
   }
 
   async function processAudioRecording() {
     const blob = new Blob(state.audioChunks, { type: "audio/webm" });
-
-    showLoading("Transcribiendo y refinando destinos...");
+    showLoading("Transcribing and refining destinations...");
 
     try {
       const formData = new FormData();
@@ -383,33 +452,31 @@
         body: formData,
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || "Error processing voice");
-      }
+      if (!res.ok) throw new Error("Error processing audio");
 
       const data = await res.json();
-
-      // Show transcript
-      transcriptText.textContent = data.transcript || "(sin transcripción)";
-      transcriptBox.classList.add("visible");
-
-      // Update locations
-      if (data.locations && data.locations.length > 0) {
-        state.locations = data.locations;
-        renderLocationCards();
-      }
-
-      micStatus.textContent = "✅ Listo — destinos actualizados";
-      micStatus.className = "mic-status";
-      hideLoading();
+      updateVoiceResults(data);
     } catch (e) {
-      console.error("Voice validation error:", e);
-      alert("Error al procesar el audio: " + e.message);
-      micStatus.textContent = "Pulsa para grabar";
-      micStatus.className = "mic-status";
+      console.error(e);
+      alert("Error processing audio: " + e.message);
+    } finally {
       hideLoading();
     }
+  }
+
+  function updateVoiceResults(data) {
+    // Show transcript
+    transcriptText.textContent = data.transcript || "(sin transcripción)";
+    transcriptBox.classList.add("visible");
+
+    // Update locations
+    if (data.locations && data.locations.length > 0) {
+      state.locations = data.locations;
+      renderLocationCards();
+    }
+
+    micStatus.textContent = "✅ Done — destinations updated";
+    micStatus.className = "mic-status";
   }
 
   // Confirm button → Phase 3
@@ -439,7 +506,7 @@
     const destCities = JSON.stringify(destinationsPayload);
     const originCity = state.origin?.city || "Barcelona";
 
-    showLoading("Buscando vuelos baratos...");
+    showLoading("Searching for cheap flights...");
 
     try {
       const res = await fetch(
@@ -456,7 +523,7 @@
       setPhase(3);
     } catch (e) {
       console.error("Flight search error:", e);
-      alert("Error al buscar vuelos: " + e.message);
+      alert("Error searching for flights: " + e.message);
       hideLoading();
       btnConfirm.disabled = false;
     }
@@ -560,11 +627,11 @@
     panelDate.textContent = flightInfo.date || "N/A";
     panelStops.textContent = flightInfo.stops || "N/A";
     if (flightInfo.flight_destination && flightInfo.flight_destination !== (flightInfo.destination_name || destName)) {
-      panelStops.textContent += ` · destino aéreo: ${flightInfo.flight_destination}`;
+      panelStops.textContent += ` · air destination: ${flightInfo.flight_destination}`;
     }
     panelClimate.textContent = locData?.climate || "N/A";
     panelLandscape.textContent = locData?.landscape || "N/A";
-    panelDescription.textContent = locData?.description || "Destino de viaje";
+    panelDescription.textContent = locData?.description || "Travel destination";
     panelHotel.textContent = flightInfo.hotel_price || "N/A";
 
     // Fetch image
@@ -608,7 +675,7 @@
     btnAnalyze.disabled = false;
     btnConfirm.disabled = false;
     transcriptBox.classList.remove("visible");
-    micStatus.textContent = "Pulsa para grabar";
+    micStatus.textContent = "Click to record";
     micStatus.className = "mic-status";
     destPanel.classList.remove("open");
     fileInput.value = "";

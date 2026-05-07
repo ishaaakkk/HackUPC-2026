@@ -183,8 +183,8 @@ def _normalize_destinations_for_flights(destinations: List[Any], origin: str = "
             no_flight_needed.append({
                 **record,
                 "status": "no_flight_needed",
-                "message": "No hace falta un vuelo",
-                "reason": "El destino coincide con el origen.",
+                "message": "No flight needed",
+                "reason": "Destination is the same as origin.",
             })
             mappings.append({**record, "action": "no_flight_needed_same_as_origin"})
             if dedupe_countries and country_key:
@@ -337,7 +337,7 @@ async def detect_origin(request: Request):
                 "country_code": "ES",
                 "latitude": 41.3874,
                 "longitude": 2.1686,
-                "note": "IP local detectada, usando Barcelona por defecto",
+                "note": "Local IP detected, using Barcelona by default",
             }
 
         resp = http_requests.get(
@@ -355,7 +355,7 @@ async def detect_origin(request: Request):
                 "country_code": "ES",
                 "latitude": 41.3874,
                 "longitude": 2.1686,
-                "note": "No se pudo detectar la ubicación, usando Barcelona por defecto",
+                "note": "Could not detect location, using Barcelona by default",
             }
 
         return {
@@ -382,7 +382,8 @@ async def detect_origin(request: Request):
 
 @router.post("/voice-validate")
 async def voice_validate(
-    audio: UploadFile = File(...),
+    audio: UploadFile = File(None),
+    transcript: str = Form(None),
     locations: str = Form(...)
 ):
     try:
@@ -391,7 +392,13 @@ async def voice_validate(
         raise HTTPException(status_code=400, detail="'locations' is not valid JSON")
 
     try:
-        transcript = transcribe_audio(audio.file)
+        if not transcript and audio:
+            # Fallback to backend transcription if no transcript provided from frontend
+            transcript = transcribe_audio(audio.file)
+        
+        if not transcript:
+            raise HTTPException(status_code=400, detail="No transcript or audio provided")
+
         result = refine_locations_with_voice(locations_list, transcript)
         refined = result.get("locations", locations_list)
         # Preserve flight hints when Gemini returns only old fields.
@@ -454,7 +461,7 @@ def search_flights(origin: str, destinations: str, date: str = "2026"):
         results["dedupe_flight_countries_enabled"] = normalization["dedupe_countries_enabled"]
         results["destination_normalization_note"] = (
             "Detected image places are converted to city/airport-friendly names before flight search. "
-            "Destinations equal to the origin are marked as 'No hace falta un vuelo'. "
+            "Destinations equal to the origin are marked as 'No flight needed'. "
             "Duplicate flight cities and duplicate countries are removed before calling Skyscanner."
         )
 
@@ -467,7 +474,7 @@ def search_flights(origin: str, destinations: str, date: str = "2026"):
                 "flight_search_city": item.get("flight_search_city"),
                 "country": item.get("country"),
                 "status": "no_flight_needed",
-                "message": "No hace falta un vuelo",
+                "message": "No flight needed",
                 "reason": item.get("reason"),
                 "requires_flight": False,
                 "price": None,
@@ -480,7 +487,7 @@ def search_flights(origin: str, destinations: str, date: str = "2026"):
                 continue
             if info.get("status") == "no_flight_needed" or info.get("requires_flight") is False:
                 # Avoid the frontend interpreting this as "sin vuelos en los próximos meses".
-                info.setdefault("message", "No hace falta un vuelo")
+                info.setdefault("message", "No flight needed")
                 info.setdefault("flights", [])
                 continue
             hotel_key = info.get("flight_search_city") or info.get("destination_name") or dest_name
@@ -707,8 +714,8 @@ def _normalize_destinations_for_flights(destinations: List[Any], origin: str = "
             no_flight_needed.append({
                 **record,
                 "status": "no_flight_needed",
-                "message": "No hace falta un vuelo",
-                "reason": "El destino coincide con el origen.",
+                "message": "No flight needed",
+                "reason": "Destination is the same as origin.",
             })
             mappings.append({**record, "action": "no_flight_needed_same_as_origin"})
             if dedupe_countries and country_key:

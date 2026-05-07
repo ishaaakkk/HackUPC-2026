@@ -412,7 +412,7 @@
           "temperature_unit": "°C",
           "time": "2026-04-27T15:00"
         },
-        "description": "Burj Khalifa es uno de los rascacielos más famosos de Dubai, en United Arab Emirates, conocido por su skyline moderno, sus miradores y su entorno urbano de grandes avenidas y edificios altos."
+        "description": "Burj Khalifa is one of the most famous skyscrapers in Dubai, United Arab Emirates, known for its modern skyline, viewpoints, and urban environment of large avenues and tall buildings."
       },
       {
         "name": "Shanghai World Financial Center",
@@ -485,7 +485,7 @@
           "temperature_unit": "°C",
           "time": "2026-04-27T19:00"
         },
-        "description": "Shanghai World Financial Center se encuentra en China. Es una posible ubicación relacionada con los elementos visuales detectados en la imagen."
+        "description": "Shanghai World Financial Center is located in China. It is a possible location related to the visual elements detected in the image."
       },
       {
         "name": "Times Square",
@@ -530,7 +530,7 @@
           "temperature_unit": "°C",
           "time": "2026-04-27T07:00"
         },
-        "description": "Times Square es una zona emblemática de New York, United States, conocida por sus pantallas luminosas, rascacielos, tiendas, teatros y ambiente urbano muy activo."
+        "description": "Times Square is an iconic area of New York, United States, known for its bright screens, skyscrapers, shops, theaters, and highly active urban atmosphere."
       },
       {
         "name": "Shibuya Crossing",
@@ -575,7 +575,7 @@
           "temperature_unit": "°C",
           "time": "2026-04-27T20:00"
         },
-        "description": "Shibuya Crossing es uno de los cruces urbanos más conocidos de Tokyo, Japan, rodeado de pantallas, tiendas, rascacielos y mucho movimiento peatonal."
+        "description": "Shibuya Crossing is one of the most well-known urban crossings in Tokyo, Japan, surrounded by screens, shops, skyscrapers, and heavy pedestrian traffic."
       },
       {
         "name": "Plaça de Catalunya",
@@ -620,7 +620,7 @@
           "temperature_unit": "°C",
           "time": "2026-04-27T13:00"
         },
-        "description": "Plaça de Catalunya se encuentra en Barcelona, Spain. Es una zona urbana destacada por su arquitectura, actividad turística y puntos de interés cercanos."
+        "description": "Plaça de Catalunya is located in Barcelona, Spain. It is a prominent urban area known for its architecture, tourist activity, and nearby points of interest."
       }
     ],
     "queries_generated": [
@@ -711,7 +711,7 @@
         "temperature_unit": "°C",
         "time": "2026-04-27T15:00"
       },
-      "description": "Burj Khalifa es uno de los rascacielos más famosos de Dubai, en United Arab Emirates, conocido por su skyline moderno, sus miradores y su entorno urbano de grandes avenidas y edificios altos."
+      "description": "Burj Khalifa is one of the most famous skyscrapers in Dubai, United Arab Emirates, known for its modern skyline, viewpoints, and urban environment of large avenues and tall buildings."
     },
     {
       "name": "Shanghai World Financial Center",
@@ -784,7 +784,7 @@
         "temperature_unit": "°C",
         "time": "2026-04-27T19:00"
       },
-      "description": "Shanghai World Financial Center se encuentra en China. Es una posible ubicación relacionada con los elementos visuales detectados en la imagen."
+      "description": "Shanghai World Financial Center is located in China. It is a possible location related to the visual elements detected in the image."
     },
     {
       "name": "Times Square",
@@ -829,7 +829,7 @@
         "temperature_unit": "°C",
         "time": "2026-04-27T07:00"
       },
-      "description": "Times Square es una zona emblemática de New York, United States, conocida por sus pantallas luminosas, rascacielos, tiendas, teatros y ambiente urbano muy activo."
+      "description": "Times Square is an iconic area of New York, United States, known for its bright screens, skyscrapers, shops, theaters, and highly active urban atmosphere."
     },
     {
       "name": "Shibuya Crossing",
@@ -874,7 +874,7 @@
         "temperature_unit": "°C",
         "time": "2026-04-27T20:00"
       },
-      "description": "Shibuya Crossing es uno de los cruces urbanos más conocidos de Tokyo, Japan, rodeado de pantallas, tiendas, rascacielos y mucho movimiento peatonal."
+      "description": "Shibuya Crossing is one of the most well-known urban crossings in Tokyo, Japan, surrounded by screens, shops, skyscrapers, and heavy pedestrian traffic."
     },
     {
       "name": "Plaça de Catalunya",
@@ -919,7 +919,7 @@
         "temperature_unit": "°C",
         "time": "2026-04-27T13:00"
       },
-      "description": "Plaça de Catalunya se encuentra en Barcelona, Spain. Es una zona urbana destacada por su arquitectura, actividad turística y puntos de interés cercanos."
+      "description": "Plaça de Catalunya is located in Barcelona, Spain. It is a prominent urban area known for its architecture, tourist activity, and nearby points of interest."
     }
   ],
   "possible_locations": [
@@ -997,7 +997,7 @@
         "temperature_unit": "°C",
         "time": "2026-04-27T15:00"
       },
-      "description": "Burj Khalifa es uno de los rascacielos más famosos de Dubai, en United Arab Emirates, conocido por su skyline moderno, sus miradores y su entorno urbano de grandes avenidas y edificios altos."
+      "description": "Burj Khalifa is one of the most famous skyscrapers in Dubai, United Arab Emirates, known for its modern skyline, viewpoints, and urban environment of large avenues and tall buildings."
     },
     {
       "name": "Shanghai World Financial Center",
@@ -1070,7 +1070,7 @@
         "temperature_unit": "°C",
         "time": "2026-04-27T19:00"
       },
-      "description": "Shanghai World Financial Center se encuentra en China. Es una posible ubicación relacionada con los elementos visuales detectados en la imagen."
+      "description": "Shanghai World Financial Center is located in China. It is a possible location related to the visual elements detected in the image."
     },
     {
       "name": "Times Square",
@@ -1115,7 +1115,7 @@
         "temperature_unit": "°C",
         "time": "2026-04-27T07:00"
       },
-      "description": "Times Square es una zona emblemática de New York, United States, conocida por sus pantallas luminosas, rascacielos, tiendas, teatros y ambiente urbano muy activo."
+      "description": "Times Square is an iconic area of New York, United States, known for its bright screens, skyscrapers, shops, theaters, and highly active urban atmosphere."
     },
     {
       "name": "Shibuya Crossing",
@@ -1160,7 +1160,7 @@
         "temperature_unit": "°C",
         "time": "2026-04-27T20:00"
       },
-      "description": "Shibuya Crossing es uno de los cruces urbanos más conocidos de Tokyo, Japan, rodeado de pantallas, tiendas, rascacielos y mucho movimiento peatonal."
+      "description": "Shibuya Crossing is one of the most well-known urban crossings in Tokyo, Japan, surrounded by screens, shops, skyscrapers, and heavy pedestrian traffic."
     },
     {
       "name": "Plaça de Catalunya",
@@ -1205,7 +1205,7 @@
         "temperature_unit": "°C",
         "time": "2026-04-27T13:00"
       },
-      "description": "Plaça de Catalunya se encuentra en Barcelona, Spain. Es una zona urbana destacada por su arquitectura, actividad turística y puntos de interés cercanos."
+      "description": "Plaça de Catalunya is located in Barcelona, Spain. It is a prominent urban area known for its architecture, tourist activity, and nearby points of interest."
     }
   ],
   "locations": [
@@ -1227,7 +1227,7 @@
       },
       "weather_error": null,
       "landscape": "landmark, tourist_attraction, point_of_interest",
-      "description": "Burj Khalifa es uno de los rascacielos más famosos de Dubai, en United Arab Emirates, conocido por su skyline moderno, sus miradores y su entorno urbano de grandes avenidas y edificios altos.",
+      "description": "Burj Khalifa is one of the most famous skyscrapers in Dubai, United Arab Emirates, known for its modern skyline, viewpoints, and urban environment of large avenues and tall buildings.",
       "formatted_address": "1 Sheikh Mohammed bin Rashid Blvd - Burj Khalifa - Downtown Dubai - Dubai - United Arab Emirates",
       "maps_url": "https://www.google.com/maps/search/?api=1&query=Burj%20Khalifa%201%20Sheikh%20Mohammed%20bin%20Rashid%20Blvd%20-%20Burj%20Khalifa%20-%20Downtown%20Dubai%20-%20Dubai%20-%20United%20Arab%20Emirates",
       "place_id": "ChIJS-JnijRDXz4R4rfO4QLlRf8",
@@ -1252,7 +1252,7 @@
       },
       "weather_error": null,
       "landscape": "premise, street_address",
-      "description": "Shanghai World Financial Center se encuentra en China. Es una posible ubicación relacionada con los elementos visuales detectados en la imagen.",
+      "description": "Shanghai World Financial Center is located in China. It is a possible location related to the visual elements detected in the image.",
       "formatted_address": "Shang Hai Huan Qiu Jin Rong Zhong Xin, 数浦港 Pu Dong Xin Qu, Shang Hai Shi, China, 200120",
       "maps_url": "https://www.google.com/maps/search/?api=1&query=Shanghai%20World%20Financial%20Center%20Shang%20Hai%20Huan%20Qiu%20Jin%20Rong%20Zhong%20Xin%2C%20%E6%95%B0%E6%B5%A6%E6%B8%AF%20Pu%20Dong%20Xin%20Qu%2C%20Shang%20Hai%20Shi%2C%20China%2C%20200120",
       "place_id": "ChIJTTWxwuVwsjURqxsZyB-YTQo",
@@ -1277,7 +1277,7 @@
       },
       "weather_error": null,
       "landscape": "country_diversity_fallback, urban",
-      "description": "Times Square es una zona emblemática de New York, United States, conocida por sus pantallas luminosas, rascacielos, tiendas, teatros y ambiente urbano muy activo.",
+      "description": "Times Square is an iconic area of New York, United States, known for its bright screens, skyscrapers, shops, theaters, and highly active urban atmosphere.",
       "formatted_address": "New York, USA",
       "maps_url": "https://www.google.com/maps/search/?api=1&query=Times%20Square%20New%20York%2C%20USA",
       "place_id": null,
@@ -1302,7 +1302,7 @@
       },
       "weather_error": null,
       "landscape": "country_diversity_fallback, urban",
-      "description": "Shibuya Crossing es uno de los cruces urbanos más conocidos de Tokyo, Japan, rodeado de pantallas, tiendas, rascacielos y mucho movimiento peatonal.",
+      "description": "Shibuya Crossing is one of the most well-known urban crossings in Tokyo, Japan, surrounded by screens, shops, skyscrapers, and heavy pedestrian traffic.",
       "formatted_address": "Tokyo, Japan",
       "maps_url": "https://www.google.com/maps/search/?api=1&query=Shibuya%20Crossing%20Tokyo%2C%20Japan",
       "place_id": null,
@@ -1327,7 +1327,7 @@
       },
       "weather_error": null,
       "landscape": "country_diversity_fallback, urban",
-      "description": "Plaça de Catalunya se encuentra en Barcelona, Spain. Es una zona urbana destacada por su arquitectura, actividad turística y puntos de interés cercanos.",
+      "description": "Plaça de Catalunya is located in Barcelona, Spain. It is a prominent urban area known for its architecture, tourist activity, and nearby points of interest.",
       "formatted_address": "Barcelona, Spain",
       "maps_url": "https://www.google.com/maps/search/?api=1&query=Pla%C3%A7a%20de%20Catalunya%20Barcelona%2C%20Spain",
       "place_id": null,
